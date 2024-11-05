@@ -1,7 +1,11 @@
 '''
 Created on 28.10.2024
 
+<<<<<<< HEAD
+@author: hfran
+=======
 @author: hfran, lisa
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 '''
 import os
 import sys
@@ -13,6 +17,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+<<<<<<< HEAD
+from scipy.optimize import minimize
+=======
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 
 from scipy.optimize import differential_evolution
 
@@ -27,12 +35,24 @@ NINF = -np.float32(np.inf)
 # from sklearn.model_selection import GridSearchCV
 
 #=============================================================================
+<<<<<<< HEAD
+# load data and params
+
+# Absolute path to the directory where the input data lies.
+<<<<<<<< HEAD:prm_optim.py
+# main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\time_series__24163005')
+========
+main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+=======
 # data preparation
 
 # load data
 # Absolute path to the directory where the input data lies.
 # main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
 main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\time_series__24163005')
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
@@ -40,7 +60,11 @@ os.chdir(main_dir)
 inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
+<<<<<<< HEAD
+# Read the catcment area in meters squared. The first value is needed
+=======
 # Read the catchment area in meters squared. The first value is needed
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 # only.
 cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
@@ -55,12 +79,97 @@ tsps = tems.shape[0]  # Number of time steps.
 # Conversion constant for mm/hour to m3/s.
 dslr = ccaa / (3600 * 1000)  # For daily res. multiply denominator with 24.
 
+<<<<<<< HEAD
+<<<<<<<< HEAD:prm_optim.py
+========
+# Read model and related files in the models directory for more info.
+# Correct sequence must be followed. Values that are out of
+# the absolute parameter range will result in an AssertionError.
+
+# turn off for all processes
+
+prms = np.array([
+    0.00,  # 'snw_dth'
+    +0.1,  # 'snw_ast'
+    -0.1,  # 'snw_amt'
+    0.01,  # 'snw_amf'
+    0.00,  # 'snw_pmf'
+
+    50.0,  # 'sl0_mse'
+    300.,  # 'sl1_mse'
+
+    70.0,  # 'sl0_fcy'
+    2.50,  # 'sl0_bt0'
+
+    300.,  # 'sl1_pwp'
+    400.,  # 'sl1_fcy'
+    2.50,  # 'sl1_bt0'
+
+    0.00,  # 'urr_dth'
+    0.00,  # 'lrr_dth'
+
+    1.00,  # 'urr_rsr'
+    30.0,  # 'urr_tdh'
+    0.15,  # 'urr_tdr'
+    1e-4,  # 'urr_cst'
+    1.00,  # 'urr_dro'
+    0.00,  # 'urr_ulc'
+
+    0.00,  # 'lrr_tdh'
+    0.00,  # 'lrr_cst'
+    0.00,  # 'lrr_dro'
+    ], dtype=np.float32)
+
+PINF = +np.float32(np.inf)
+NINF = -np.float32(np.inf)
+
+buds = {
+        'snw_dth': (0.00, PINF),
+        'snw_ast': (NINF, PINF),
+        'snw_amt': (NINF, PINF),
+        'snw_amf': (0.00, PINF),
+        'snw_pmf': (0.00, PINF),
+
+        'sl0_mse': (0.00, PINF),
+        'sl1_mse': (0.00, PINF),
+
+        'sl0_fcy': (0.00, PINF),
+        'sl0_bt0': (0.00, PINF),
+
+        'sl1_pwp': (0.00, PINF),
+        'sl1_fcy': (0.00, PINF),
+        'sl1_bt0': (0.00, PINF),
+
+        'urr_dth': (0.00, PINF),
+        'lrr_dth': (0.00, PINF),
+
+        'urr_rsr': (0.00, 1.00),
+        'urr_tdh': (0.00, PINF),
+        'urr_tdr': (0.00, 1.00),
+        'urr_cst': (0.00, 1.00),
+        'urr_dro': (0.00, 1.00),
+        'urr_ulc': (0.00, 1.00),
+
+        'lrr_tdh': (0.00, PINF),
+        'lrr_cst': (0.00, 1.00),
+        'lrr_dro': (0.00, 1.00),
+    }
+
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+#=============================================================================
+# metrics
+=======
 #=============================================================================
 # define different metrics
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 
 
 def nse(sim, obs):
     '''Nash-Suttcliffe Efficiency'''
+<<<<<<< HEAD
+<<<<<<<< HEAD:prm_optim.py
+=======
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
     # return 1- nse to make minimization work
     return 1 - (1 - (np.sum((obs - sim) ** 2) / np.sum((obs - np.mean(obs)) ** 2)))
 
@@ -70,6 +179,13 @@ def lognse(sim, obs):
     '''log of NSE'''
     return nse(sim, obs)
     # return nse(sim, obs) if nse(sim, obs) > 0 else raise ValueError('log not defined')
+<<<<<<< HEAD
+========
+    return -1 * (1 - (np.sum((obs - sim) ** 2) / np.sum((obs - np.mean(obs)) ** 2)))
+# lnNSE log of NSE, log of inputs, no 0
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+=======
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 
 
 def pbias(sim, obs):
@@ -77,6 +193,16 @@ def pbias(sim, obs):
 
 
 def rmse(sim, obs):
+<<<<<<< HEAD
+    return np.sqrt(np.mean((sim - obs) ** 2))
+
+
+def sse(sim, obs):
+    return np.sum((sim - obs) ** 2)
+
+
+<<<<<<<< HEAD:prm_optim.py
+=======
     return np.sqrt(np.mean((sim - obs) ^ 2))
 
 
@@ -84,6 +210,7 @@ def sse(sim, obs):
     return np.sum((sim - obs) ^ 2)
 
 
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 #=============================================================================
 # define objective function
 def obj_fun(prms, modl_objt, metric: str, diso):
@@ -109,10 +236,50 @@ def obj_fun(prms, modl_objt, metric: str, diso):
     modl_objt.set_parameters(prms)
 
     # Tell the model object that the simulation is not an optimization.
+<<<<<<< HEAD
+========
+#==========================================================================
+def obj_function(prms, obs, accuracy, buds_dict):
+
+    # obj_fct_value = sse(sim, obs)
+
+    # Initiate an empty model object. To understand what each method call
+    # used below is for, please take a look at the files inside models
+    # directory.
+    modl_objt = HBV1D012A()
+
+    # Set the above defined inputs.
+    modl_objt.set_inputs(tems, ppts, pets)
+
+    # Pass the number of time steps to the model object here. It creates the
+    # ouputs array(s) with the proper shape.
+    modl_objt.set_outputs(tsps)
+
+    # Set the constant that will convert units from those of precipitation
+    # to those of measured discharge.
+    modl_objt.set_discharge_scaler(dslr)
+    #==========================================================================
+    # Get a dictionary that links an output labe to its column index in the
+    # ouputs array.
+    otps_lbls = modl_objt.get_output_labels()
+
+    # Pass the parameters.
+    modl_objt.set_parameters(prms)
+
+    bounds = modl_objt.get_parameter_bounds_in_correct_order(buds_dict)
+
+    # Tell the model object that the simulation is a not an optimization.
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+=======
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
     modl_objt.set_optimization_flag(0)
 
     # Run the model for the given inputs, constants and parameters.
     modl_objt.run_model()
+<<<<<<< HEAD
+<<<<<<<< HEAD:prm_optim.py
+=======
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 
     # compute obj value with current parms
     diss = modl_objt.get_discharge()
@@ -120,6 +287,7 @@ def obj_fun(prms, modl_objt, metric: str, diso):
     return metric_fun(diss, diso)
 
 #==============================================================================
+<<<<<<< HEAD
 # main code
 
 
@@ -186,15 +354,59 @@ optim_fun_val = optim_res.population_energies
 print(f"optimal parameters : {optim_prms}")
 print(f"success: {optim_res.message} ")
 print(f"optimized objective value: {optim_fun_val}")
+========
 
+    # Read the internal ouputs and simulated discharge.
+    otps = modl_objt.get_outputs()
+    diss = modl_objt.get_discharge()
+
+    # sim = model(params)
+    # compute rmse(sim, obs) =ofv?
+    # Q: what is obj fct value?
+
+    return diss, otps, otps_lbls, bounds
+
+
+def objective_function(prms, accuracy):
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+
+    # Q: What is least number of processes required?
+    # bedeutet: einzelne Parameter = 0 setzen
+    diss, otps, otps_lbls, bounds = obj_function(prms, diso, accuracy, buds)
+    obj_fct_value = accuracy(diss, diso)
+    return obj_fct_value
 #==============================================================================
 # produce plots
 
+<<<<<<<< HEAD:prm_optim.py
 otps = modl_objt.get_outputs()
 diss = modl_objt.get_discharge()
 
 
 def plot_output():
+========
+
+def plot_output(diss, otps, otps_lbls, prm, conclusion):  # TODO define inputs
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+=======
+# implement optimization scheme
+
+
+def optimize(modl_objt, prms, metric: str, diso):
+
+    # ? können/ sollten wir hierfür eine function definieren oder müssen wir da
+    # manuell herumprobieren, indem wir initial prms ändern etc. ?
+    # oder machen wir hier eine grid search?
+
+    pass
+
+#==============================================================================
+# produce plots
+
+
+# def plot_output(
+def plot_output():  # TODO define inputs
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
     # Show a figure of the observed vs. simulated river flow.
     fig = plt.figure()
 
@@ -209,9 +421,16 @@ def plot_output():
     plt.xlabel('Time [hr]')
     plt.ylabel('Discharge\n[$m^3.s^{-1}$]')
 
+<<<<<<< HEAD
+    plt.title('Observed vs. Simulated RIver Flow')
+
+    # plt.show()
+    fig.savefig(f'C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\lbfgs_nse_{conclusion}.png')
+=======
     plt.title('Observed vs. Simulated River Flow')
 
     plt.show()
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
     plt.close(fig)
     #===========================================================================
 
@@ -260,7 +479,11 @@ def plot_output():
 
     axs_etn.set_ylabel('ETN\n[mm]')
     axs_etn.legend()
+<<<<<<< HEAD
+    #==========================================================================
+=======
     #===========================================================================
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
 
     # Depth of water in the upper and lower reservoirs.
     axs_rrr.plot(
@@ -298,6 +521,185 @@ def plot_output():
     plt.xticks(rotation=45)
 
     plt.suptitle('Inputs, and internally simulated variables of HBV')
+<<<<<<< HEAD
+    # plt.show()
+    fig.savefig(f'C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\lbfgs_nse_2.png')
+
+    plt.close(fig)
+<<<<<<<< HEAD:prm_optim.py
+========
+
+
+counter = 1
+obj_fct_values = {}
+prm_values = {}
+
+
+def callback(x):
+    diss_2, otps_2, otps_lbls_2, bounds_prms = obj_function(x, diso, pbias, buds)
+    error = nse(diso, diss_2)
+    global counter
+    counter += 1
+    global obj_fct_values
+    obj_fct_values[counter] = error
+    global prm_values
+    prm_values[counter] = x
+    # print(obj_fct_values)
+
+
+if __name__ == '__main__':
+    # obj_fct_value, diss, otps, otps_lbls = obj_function(diso, nse)
+    # print(obj_fct_value)
+    diss_2, otps_2, otps_lbls_2, bounds_prms = obj_function(prms, diso, nse, buds)
+
+    prm_names = list(buds.keys())
+
+    print(bounds_prms)
+    ''' for i in range(len(prms)):
+        prms[i] = 0
+        bounds_prms[i] = [0, 0]          # nummer zuweisungen immer an anfang schreiben
+        res = minimize(
+                objective_function,
+                method='SLSQP',
+                x0=prms,
+                args=(pbias),
+                options={'maxiter':50, 'disp':True},
+                bounds=bounds_prms,
+                )
+        print(res)
+        x_param = res.x
+        x_success = res.success
+        x_message = res.message
+        x_fun_value = res.fun
+        conclusion = f"terminated{x_success}_with_obj_value{x_fun_value}"
+        print(x_param)
+        diss_3, otps_3, otps_lbls_3, bounds_prms = obj_function(x_param, diso, rmse, buds)
+
+        plot_output(diss_3, otps_3, otps_lbls_3, prm_names[i], conclusion)'''
+
+    '''for i in range(len(prms)):
+        for j in range(len(prms)):
+            if i != j:
+
+                given_prm_value = prms[j]
+                bounds_prms[j] = [given_prm_value, given_prm_value]
+
+        res = minimize(
+                objective_function,
+                method='L-BFGS-B',
+                x0=prms,
+                args=(rmse),
+                options={'maxiter':50, 'disp':True},
+                bounds=bounds_prms,
+                callback=callback,
+                )
+        print(res)
+        x_param = res.x
+        x_success = res.success
+        x_message = res.message
+        x_fun_value = res.fun
+        conclusion = f"terminated{x_success}_with_obj_value{x_fun_value}"
+        print(x_param)
+        diss_3, otps_3, otps_lbls_3, bounds_prms = obj_function(x_param, diso, rmse, buds)
+        print(obj_fct_values)
+        plot_output(diss_3, otps_3, otps_lbls_3, prm_names[i], conclusion)
+
+'''
+    res = minimize(
+                objective_function,
+                method='L-BFGS-B',
+                x0=prms,
+                args=(nse),
+                options={'maxiter':50, 'disp':True},
+                bounds=bounds_prms,
+                callback=callback,
+                )
+    print(res)
+    x_param = res.x
+    x_success = res.success
+    x_message = res.message
+    x_fun_value = res.fun
+    conclusion = f"terminated{x_success}_with_obj_value{x_fun_value}"
+    print(x_param)
+    diss_3, otps_3, otps_lbls_3, bounds_prms = obj_function(x_param, diso, nse, buds)
+    print(obj_fct_values)
+    plot_output(diss_3, otps_3, otps_lbls_3, prm_names, conclusion)
+
+# snow melt, soil, urr, lrr
+# plot each parameter value against its obj function values
+# plot obj fct value against iteration
+>>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc:task_1_paaram_opt.py
+=======
     plt.show()
 
     plt.close(fig)
+
+#==============================================================================
+# main code
+
+
+# # preparations enabling proper work with model (explanations see aa_run_model)
+modl_objt = HBV1D012A()
+modl_objt.set_inputs(tems, ppts, pets)
+modl_objt.set_outputs(tsps)
+modl_objt.set_discharge_scaler(dslr)
+otps_lbls = modl_objt.get_output_labels()
+
+# # perform task
+# Q: What is least number of processes required?
+# bedeutet: einzelne Parameter = 0 setzen
+
+# manually set prms bounds
+# bounds copied from standard model (also see moodle)
+bounds_dict = {
+        'snw_dth': (0.00, 0.00),
+        'snw_ast': (-1.0, 1.0),
+        'snw_amt': (-1.0, 2.0),
+        'snw_amf': (0.00, 0.00),
+        'snw_pmf': (0.00, 2.00),
+
+        'sl0_mse': (0.00, 1e+2),
+        'sl1_mse': (0.00, 2e+2),
+
+        'sl0_fcy': (0.00, 2e+2),
+        'sl0_bt0': (0.00, 3.00),
+
+        'sl1_pwp': (0.00, 4e+2),
+        'sl1_fcy': (0.00, 4e+2),
+        'sl1_bt0': (0.00, 4.00),
+
+        'urr_dth': (0.00, 2e+1),
+        'lrr_dth': (0.00, 5.00),
+
+        'urr_rsr': (0.00, 1.00),
+        'urr_tdh': (0.00, 1e+2),
+        'urr_tdr': (0.00, 1.00),
+        'urr_cst': (0.00, 1.00),
+        'urr_dro': (0.00, 1.00),
+        'urr_ulc': (0.00, 1.00),
+
+        'lrr_tdh': (0.00, 1e+4),
+        'lrr_cst': (0.00, 1.00),
+        'lrr_dro': (0.00, 1.00),
+    }
+
+# put bounds into array of floats
+bounds = list(bounds_dict.values())
+
+# set metric that should be used
+metric = "nse"
+
+# implement optimization using differential evolution algo
+# something like (i have not tested this):
+# optim_res = differential_evolution(func=obj_fun, args=(modl_objt, metric, diso), bounds=bounds, maxiter=1, polish=False)
+
+# obtain fitted prms
+optim_prms = optim_res.x
+print(optim_prms)
+
+#========================================= further code sniplets
+# Read the internal ouputs and simulated discharge.
+# otps = modl_objt.get_outputs()
+# diss = modl_objt.get_discharge()
+
+>>>>>>> 9fccf483ab2c2fdb0cc95751e90362179b3a03bc
