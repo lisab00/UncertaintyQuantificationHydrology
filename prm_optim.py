@@ -14,9 +14,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from scipy.optimize import differential_evolution
+
 from hmg import HBV1D012A
-from models import hbv1d012a_py
-from test import aa_run_model
+from hmg.models import hbv1d012a_py
+from hmg.test import aa_run_model
+
+PINF = +np.float32(np.inf)
+NINF = -np.float32(np.inf)
 
 # use scipy for optimization
 # from sklearn.model_selection import GridSearchCV
@@ -26,8 +31,8 @@ from test import aa_run_model
 
 # load data
 # Absolute path to the directory where the input data lies.
-main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
-#main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\time_series__24163005')
+# main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\time_series__24163005')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
@@ -50,20 +55,21 @@ tsps = tems.shape[0]  # Number of time steps.
 # Conversion constant for mm/hour to m3/s.
 dslr = ccaa / (3600 * 1000)  # For daily res. multiply denominator with 24.
 
-
 #=============================================================================
 # define different metrics
 
 
 def nse(sim, obs):
     '''Nash-Suttcliffe Efficiency'''
-    return 1 - (np.sum((obs - sim) ** 2) / np.sum((obs - np.mean(obs)) ** 2))
+    # return 1- nse to make minimization work
+    return 1 - (1 - (np.sum((obs - sim) ** 2) / np.sum((obs - np.mean(obs)) ** 2)))
 
 
 # lnNSE log of NSE, log of inputs, no 0
 def lognse(sim, obs):
     '''log of NSE'''
-    return nse(sim, obs) if nse(sim, obs) > 0 else raise ValueError('log not defined')
+    return nse(sim, obs)
+    # return nse(sim, obs) if nse(sim, obs) > 0 else raise ValueError('log not defined')
 
 
 def pbias(sim, obs):
@@ -80,9 +86,9 @@ def sse(sim, obs):
 
 #=============================================================================
 # define objective function
-def obj_fun(modl_objt, prms, metric: str, diso):
-    
-    ## read out metric string
+def obj_fun(prms, modl_objt, metric: str, diso):
+
+    # # read out metric string
     # Dictionary mapping string names to metric functions
     metrics = {
         "sse": sse,
@@ -91,47 +97,104 @@ def obj_fun(modl_objt, prms, metric: str, diso):
         "lognse": lognse,
         "pbias": pbias
     }
-    
+
     # Get the right metric function using dictionary
     metric_fun = metrics.get(metric)
-    
+
     if not metric_fun:
         raise ValueError(f"Function '{metric}' is not recognized.")
-    
-    
-    ## simulate model with prms and compute obj value
+
+    # # simulate model with prms and compute obj value
     # Pass the current parameters to model object
     modl_objt.set_parameters(prms)
-    
+
     # Tell the model object that the simulation is not an optimization.
     modl_objt.set_optimization_flag(0)
 
     # Run the model for the given inputs, constants and parameters.
     modl_objt.run_model()
-    
+
     # compute obj value with current parms
-    diss = modl_obj.get_discharge()
-    
+    diss = modl_objt.get_discharge()
+
     return metric_fun(diss, diso)
 
-
 #==============================================================================
-# implement optimization scheme
+# main code
 
-def optimize(modl_objt, prms, metric: str, diso):
 
-    # ? können/ sollten wir hierfür eine function definieren oder müssen wir da 
-    # manuell herumprobieren, indem wir initial prms ändern etc. ?
-    # oder machen wir hier eine grid search?
-    
-    pass
+# # preparations enabling proper work with model (explanations see aa_run_model)
+modl_objt = HBV1D012A()
+modl_objt.set_inputs(tems, ppts, pets)
+modl_objt.set_outputs(tsps)
+modl_objt.set_discharge_scaler(dslr)
+otps_lbls = modl_objt.get_output_labels()
 
+# # perform task
+# Q: What is least number of processes required?
+# bedeutet: einzelne Parameter = 0 setzen
+
+# manually set prms bounds
+# bounds copied from standard model (also see moodle)
+bounds_dict = {
+        'snw_dth': (0.00, 0.00),
+        'snw_ast': (-1.0, 1.0),
+        'snw_amt': (-1.0, 2.0),
+        'snw_amf': (0.00, 0.00),
+        'snw_pmf': (0.00, 2.00),
+
+        'sl0_mse': (0.00, 1e+2),
+        'sl1_mse': (0.00, 2e+2),
+
+        'sl0_fcy': (0.00, 2e+2),
+        'sl0_bt0': (0.00, 3.00),
+
+        'sl1_pwp': (0.00, 4e+2),
+        'sl1_fcy': (0.00, 4e+2),
+        'sl1_bt0': (0.00, 4.00),
+
+        'urr_dth': (0.00, 2e+1),
+        'lrr_dth': (0.00, 5.00),
+
+        'urr_rsr': (0.00, 1.00),
+        'urr_tdh': (0.00, 1e+2),
+        'urr_tdr': (0.00, 1.00),
+        'urr_cst': (0.00, 1.00),
+        'urr_dro': (0.00, 1.00),
+        'urr_ulc': (0.00, 1.00),
+
+        'lrr_tdh': (0.00, 1e+4),
+        'lrr_cst': (0.00, 1.00),
+        'lrr_dro': (0.00, 1.00),
+    }
+
+# put bounds into array of floats
+bounds = list(bounds_dict.values())
+
+# set metric that should be used
+metric = "nse"
+
+# implement optimization using differential evolution algo
+# something like (i have not tested this):
+# optim_res = differential_evolution(func=obj_fun, args=(modl_objt, metric, diso), bounds=bounds, maxiter=1, polish=False)
+
+# obtain fitted prms
+optim_suc = optim_res.success
+optim_prms = optim_res.x
+optim_fun_val = optim_res.population_energies
+
+print(f"optimal parameters : {optim_prms}")
+print(f"success: {optim_res.message} ")
+print(f"optimized objective value: {optim_fun_val}")
 
 #==============================================================================
 # produce plots
 
-# def plot_output(
-def plot_output():  # TODO define inputs
+otps = modl_objt.get_outputs()
+diss = modl_objt.get_discharge()
+
+
+def plot_output():
     # Show a figure of the observed vs. simulated river flow.
     fig = plt.figure()
 
@@ -238,109 +301,3 @@ def plot_output():  # TODO define inputs
     plt.show()
 
     plt.close(fig)
-
-
-#==============================================================================
-# main code
-
-
-## preparations enabling proper work with model (explainations see aa_run_model)
-modl_objt = HBV1D012A()
-modl_objt.set_inputs(tems, ppts, pets)
-modl_objt.set_outputs(tsps)
-modl_objt.set_discharge_scaler(dslr)
-otps_lbls = modl_objt.get_output_labels()
-
-
-## perform task
-# Q: What is least number of processes required?
-# bedeutet: einzelne Parameter = 0 setzen
-
-# manually set initial parameter values
-prms_init = np.array([
-    0.00,  # 'snw_dth'
-    -0.1,  # 'snw_ast'
-    +0.1,  # 'snw_amt'
-    0.01,  # 'snw_amf'
-    0.00,  # 'snw_pmf'
-
-    50.0,  # 'sl0_mse'
-    300.,  # 'sl1_mse'
-
-    70.0,  # 'sl0_fcy'
-    2.50,  # 'sl0_bt0'
-
-    300.,  # 'sl1_pwp'
-    400.,  # 'sl1_fcy'
-    2.50,  # 'sl1_bt0'
-
-    0.00,  # 'urr_dth'
-    0.00,  # 'lrr_dth'
-
-    1.00,  # 'urr_rsr'
-    30.0,  # 'urr_tdh'
-    0.15,  # 'urr_tdr'
-    1e-4,  # 'urr_cst'
-    1.00,  # 'urr_dro'
-    0.00,  # 'urr_ulc'
-
-    0.00,  # 'lrr_tdh'
-    0.00,  # 'lrr_cst'
-    0.00,  # 'lrr_dro'
-    ], dtype=np.float32)
-
-
-# manually set prms bounds
-# bounds copied from standard model (also see moodle)
-bounds = {
-        'snw_dth': (0.00, PINF),
-        'snw_ast': (NINF, PINF),
-        'snw_amt': (NINF, PINF),
-        'snw_amf': (0.00, PINF),
-        'snw_pmf': (0.00, PINF),
-
-        'sl0_mse': (0.00, PINF),
-        'sl1_mse': (0.00, PINF),
-
-        'sl0_fcy': (0.00, PINF),
-        'sl0_bt0': (0.00, PINF),
-
-        'sl1_pwp': (0.00, PINF),
-        'sl1_fcy': (0.00, PINF),
-        'sl1_bt0': (0.00, PINF),
-
-        'urr_dth': (0.00, PINF),
-        'lrr_dth': (0.00, PINF),
-
-        'urr_rsr': (0.00, 1.00),
-        'urr_tdh': (0.00, PINF),
-        'urr_tdr': (0.00, 1.00),
-        'urr_cst': (0.00, 1.00),
-        'urr_dro': (0.00, 1.00),
-        'urr_ulc': (0.00, 1.00),
-
-        'lrr_tdh': (0.00, PINF),
-        'lrr_cst': (0.00, 1.00),
-        'lrr_dro': (0.00, 1.00),
-    }
-
-
-# set metric that should be used
-metric = "sse"
-
-
-# imnplement optimization using differential evolution algo
-# something like (i have not tested this):
-optim_res = differential_evolution(obj_fun, args=(modl_objt, prms_init, metric, diso), bounds)
-
-
-# obtain fitted prms
-optim_prms = optims_res.x
-
-
-
-#========================================= further code sniplets
-# Read the internal ouputs and simulated discharge.
-#otps = modl_objt.get_outputs()
-#diss = modl_objt.get_discharge()
-
