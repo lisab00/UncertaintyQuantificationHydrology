@@ -20,9 +20,6 @@ from hmg import HBV1D012A
 from hmg.models import hbv1d012a_py
 from hmg.test import aa_run_model
 
-PINF = +np.float32(np.inf)
-NINF = -np.float32(np.inf)
-
 #=============================================================================
 # data preparation
 
@@ -115,6 +112,14 @@ def obj_fun(prms, modl_objt, metric: str, diso):
     diss = modl_objt.get_discharge()
 
     return metric_fun(diss, diso)
+
+#==============================================================================
+# define function to store intermediate results
+
+
+# how do i return the intermediate parms / obj values ?
+def callback(intermediate_result):
+    print(intermediate_result.fun)
 
 #==============================================================================
 # produce plots
@@ -279,11 +284,13 @@ bounds_dict = {
 metric = "nse"
 
 # implement optimization using differential evolution algo
-res = differential_evolution(func=obj_fun,
-                                   args=(modl_objt, metric, diso),
-                                   bounds=list(bounds_dict.values()),
-                                   maxiter=3,
-                                   polish=False)
+res = differential_evolution(func=obj_fun,  # function to be minimized
+                             args=(modl_objt, metric, diso),  # fixed args for func
+                             bounds=list(bounds_dict.values()),  # bounds on prms
+                             maxiter=1,  # max number of iterations to be performed
+                             callback=callback,  # saves intermediate optimization results
+                             tol=1e-5,  # allow for early stopping
+                             polish=False)  # always set this to false
 
 # obtain fitted prms
 res_prms = res.x
@@ -303,3 +310,5 @@ diss = modl_objt.get_discharge()
 
 plot_output(otps, diss, diso)
 
+# plot optimization curve
+# plt.plot(interm_fun_val, list(range(1, len(interm_fun_val) + 1)))
