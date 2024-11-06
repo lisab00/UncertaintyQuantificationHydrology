@@ -119,15 +119,16 @@ def obj_fun(prms, modl_objt, metric: str, diso):
 
 
 def callback(intermediate_result):
+    data = [intermediate_result.fun, *intermediate_result.x]
     with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "a", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([intermediate_result.fun])
+        writer = csv.writer(csvfile, delimiter=';')
+        writer.writerow(data)
 
 #==============================================================================
 # produce plots
 
 
-def plot_output(otps, diss, diso):
+def plot_output(otps, diss, diso, obj_fct_values):
     # Show a figure of the observed vs. simulated river flow.
     fig = plt.figure()
 
@@ -235,6 +236,26 @@ def plot_output(otps, diss, diso):
 
     plt.close(fig)
 
+    #==========================================================================
+
+    # Plot optimization curve
+    fig = plt.figure()
+
+    plt.plot(list(range(1, len(obj_fct_values) + 1)), obj_fct_values)
+
+    plt.grid()
+    plt.legend()
+
+    plt.xticks(rotation=45)
+
+    plt.xlabel('Optimization iteration')
+    plt.ylabel('Objective functionvalue')
+
+    plt.title('Plot of optimization progress')
+
+    plt.show()
+    plt.close(fig)
+
 #==============================================================================
 # main code
 
@@ -292,7 +313,7 @@ metric = "nse"
 res = differential_evolution(func=obj_fun,  # function to be minimized
                              args=(modl_objt, metric, diso),  # fixed args for func
                              bounds=list(bounds_dict.values()),  # bounds on prms
-                             maxiter=100,  # max number of iterations to be performed
+                             maxiter=1,  # max number of iterations to be performed
                              callback=callback,  # write intermediate values to csv file
                              tol=1e-5,  # allow for early stopping
                              seed=10,  # make stochastic minimization reproducible
@@ -311,39 +332,11 @@ print(f"value of performance metric: {res_fun_val}")
 print(f"message: {res.message}")
 print(f"number of iterations performed: {res.nit}")
 
-# plot diso against diss
+# produce plots
 otps = modl_objt.get_outputs()
 diss = modl_objt.get_discharge()
+# obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output.csv", header=None)
+interm_res = pd.read_csv("C:\\Users\\lihel\\Documents\\MMUQ_Python_Setup\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\UncertaintyQuantificationHydrology\\outputs_task1\\output.csv", delimiter=';')
 
-plot_output(otps, diss, diso)
+plot_output(otps, diss, diso, interm_res["Obj_fct_value"])
 
-# plot optimization curve
-# plottet irgendwie nichts
-# interm_fun_val = np.array([])
-#with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "r") as csvfile:
- #   reader = csv.reader(csvfile)
-
-obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output.csv", header=None)
-
-obj_fct_values.columns = ["Obj_fct_value"]
-# for row in reader:
-    # y_values.append(row[0])
-
-fig = plt.figure()
-
-# plt.plot(interm_fun_val, list(range(1, len(interm_fun_val) + 1)))
-plt.plot(list(range(1, len(obj_fct_values["Obj_fct_value"]) + 1)), obj_fct_values["Obj_fct_value"])
-
-
-plt.grid()
-plt.legend()
-
-plt.xticks(rotation=45)
-
-plt.xlabel('Optimization iteration')
-plt.ylabel('Objective functionvalue')
-
-plt.title('Plot of optimization progress')
-
-plt.show()
-plt.close(fig)
