@@ -319,16 +319,21 @@ plot_output(otps, diss, diso)
 
 # plot optimization curve
 # plottet irgendwie nichts
-interm_fun_val = np.array([])
-with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "r") as csvfile:
-    reader = csv.reader(csvfile)
+# interm_fun_val = np.array([])
+#with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "r") as csvfile:
+ #   reader = csv.reader(csvfile)
 
-for row in reader:
-    y_values.append(row[0])
+obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output.csv", header=None)
+
+obj_fct_values.columns = ["Obj_fct_value"]
+# for row in reader:
+    # y_values.append(row[0])
 
 fig = plt.figure()
 
-plt.plot(interm_fun_val, list(range(1, len(interm_fun_val) + 1)))
+# plt.plot(interm_fun_val, list(range(1, len(interm_fun_val) + 1)))
+plt.plot(list(range(1, len(obj_fct_values["Obj_fct_value"]) + 1)), obj_fct_values["Obj_fct_value"])
+
 
 plt.grid()
 plt.legend()
