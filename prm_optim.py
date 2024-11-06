@@ -12,6 +12,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import csv
 import matplotlib.pyplot as plt
 
 from scipy.optimize import differential_evolution
@@ -117,9 +118,10 @@ def obj_fun(prms, modl_objt, metric: str, diso):
 # define function to store intermediate results
 
 
-# how do i return the intermediate parms / obj values ?
 def callback(intermediate_result):
-    print(intermediate_result.fun)
+    with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "a", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([intermediate_result.fun])
 
 #==============================================================================
 # produce plots
@@ -283,24 +285,29 @@ bounds_dict = {
 # set metric that should be used
 metric = "nse"
 
-# implement optimization using differential evolution algo
+# # implement optimization using differential evolution algo
+# bevor each run make sure to update the path to csv file for intermediate results
+# in the callback function
+
 res = differential_evolution(func=obj_fun,  # function to be minimized
                              args=(modl_objt, metric, diso),  # fixed args for func
                              bounds=list(bounds_dict.values()),  # bounds on prms
-                             maxiter=1,  # max number of iterations to be performed
-                             callback=callback,  # saves intermediate optimization results
+                             maxiter=100,  # max number of iterations to be performed
+                             callback=callback,  # write intermediate values to csv file
                              tol=1e-5,  # allow for early stopping
+                             seed=10,  # make stochastic minimization reproducible
+                             disp=True,  # print intermediate results
                              polish=False)  # always set this to false
 
 # obtain fitted prms
 res_prms = res.x
 res_suc = res.success
-res_fun_val = res.fun
+res_fun_val = 1 - res.fun
 
 # print outputs
 print(f"optimized prms: {res_prms}")
 print(f"success: {res_suc}")
-print(f"objective function value: {res_fun_val}")
+print(f"value of performance metric: {res_fun_val}")
 print(f"message: {res.message}")
 print(f"number of iterations performed: {res.nit}")
 
@@ -311,4 +318,27 @@ diss = modl_objt.get_discharge()
 plot_output(otps, diss, diso)
 
 # plot optimization curve
-# plt.plot(interm_fun_val, list(range(1, len(interm_fun_val) + 1)))
+# plottet irgendwie nichts
+interm_fun_val = np.array([])
+with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "r") as csvfile:
+    reader = csv.reader(csvfile)
+
+for row in reader:
+    y_values.append(row[0])
+
+fig = plt.figure()
+
+plt.plot(interm_fun_val, list(range(1, len(interm_fun_val) + 1)))
+
+plt.grid()
+plt.legend()
+
+plt.xticks(rotation=45)
+
+plt.xlabel('Optimization iteration')
+plt.ylabel('Objective functionvalue')
+
+plt.title('Plot of optimization progress')
+
+plt.show()
+plt.close(fig)
