@@ -274,8 +274,8 @@ otps_lbls = modl_objt.get_output_labels()
 bounds_dict = {
         'snw_dth': (0.00, 0.00),
         'snw_ast': (-1.0, +1.0),
-        'snw_amt': (-1.0, +2.0),
-        'snw_amf': (0.00, 0.00),
+        'snw_amt': (-0.0, +2.0),
+        'snw_amf': (0.00, 2.00),
         'snw_pmf': (0.00, 2.00),
 
         'sl0_mse': (0.00, 1e+2),
@@ -289,13 +289,13 @@ bounds_dict = {
         'sl1_bt0': (0.00, 4.00),
 
         'urr_dth': (0.00, 2e+1),
-        'lrr_dth': (0.00, 0.00),
+        'lrr_dth': (0.00, 5.00),
 
         'urr_rsr': (0.00, 1.00),
-        'urr_tdh': (3e+5, 3e+5),
-        'urr_tdr': (0.00, 0.00),
-        'urr_cst': (0.00, 0.00),
-        'urr_dro': (0.00, 0.00),
+        'urr_tdh': (0.00, 1e+2),
+        'urr_tdr': (0.00, 1.00),
+        'urr_cst': (0.00, 1.00),
+        'urr_dro': (0.00, 1.00),
         'urr_ulc': (0.00, 1.00),
 
         'lrr_tdh': (0.00, 1e+4),
@@ -313,9 +313,9 @@ metric = "nse"
 res = differential_evolution(func=obj_fun,  # function to be minimized
                              args=(modl_objt, metric, diso),  # fixed args for func
                              bounds=list(bounds_dict.values()),  # bounds on prms
-                             maxiter=1,  # max number of iterations to be performed
+                             # maxiter=1,  # max number of iterations to be performed
                              callback=callback,  # write intermediate values to csv file
-                             tol=1e-5,  # allow for early stopping
+                             tol=0.01,  # stopping criterion
                              seed=10,  # make stochastic minimization reproducible
                              disp=True,  # print intermediate results
                              polish=False)  # always set this to false
