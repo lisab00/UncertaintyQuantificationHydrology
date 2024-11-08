@@ -1,10 +1,10 @@
-
+# Boundaries for shutting off
 bounds_dict_snw = {
-        'snw_dth': (-9999,-9999),
-        'snw_ast': (-9999, -9999),
-        'snw_amt': (-9999, -9999),
-        'snw_amf': (-9999, -9999),
-        'snw_pmf': (-9999, -9999),
+        'snw_dth': (0.00, 0.00),  # set initial snow depth to 0
+        'snw_ast': (-9999, -9999),  # set air snow temp very low
+        'snw_amt': (-9999, -9999),  # set air melt temp very low
+        'snw_amf': (0.00, 0.00),  # set air melt factor to 0
+        'snw_pmf': (0.00, 0.00),  # set ppt melt factor to 0
 
         'sl0_mse': (0.00, 1e+2),
         'sl1_mse': (0.00, 2e+2),
