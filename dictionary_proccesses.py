@@ -113,15 +113,15 @@ bounds_dict_urr = {
         'sl1_fcy': (0.00, 4e+2),
         'sl1_bt0': (0.00, 4.00),
 
-        'urr_dth': (0, 0), #initial water level in upper reservoir
+        'urr_dth': (0, 0), # initial water level in upper reservoir
         'lrr_dth': (0.00, 5.00),
 
         'urr_rsr': (0, 0), # Runoff Split Factor, höherer Wert bedeutet mehr schneller Abfluss
-        'urr_tdh': (0, 0), # Beginn des schnellen Abflusses
+        'urr_tdh': (0, 0), # Beginn des schnellen Abflusses,
         'urr_tdr': (0, 0), # höherer Wert dieser Konstante bewirkt, dass das Wasser länger im Reservoir verbleibt, bevor schneller Abfluss
-        'urr_cst': (1, 1), # Faktor für die Geschwindigkeit
-        'urr_dro': (1, 1), # Verhältnis Wasservolumen, dass abfliest
-        'urr_ulc': (0, 0), # es fließt dadurch nichts ins untere reservoir, sondern alles in den abfluss
+        'urr_cst': (1, 1), # Faktor für die Geschwindigkeit, if 0.8 -> 80% will come out of the reservoir
+        'urr_dro': (1, 1), # Verhältnis Wasservolumen, dass abfliest, how much is "surface water" of the water which comes out
+        'urr_ulc': (0, 0), # upper lower constant, i think how much , es fließt dadurch nichts ins untere reservoir, sondern alles in den abfluss
 
         'lrr_tdh': (0.00, 1e+4),
         'lrr_cst': (0.00, 1.00),

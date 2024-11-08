@@ -17,9 +17,9 @@ import matplotlib.pyplot as plt
 
 from scipy.optimize import differential_evolution
 
-from hmg import HBV1D012A
 from hmg.models import hbv1d012a_py
 from hmg.test import aa_run_model
+from hmg import HBV1D012A
 
 #=============================================================================
 # data preparation
@@ -27,17 +27,17 @@ from hmg.test import aa_run_model
 # load data
 # Absolute path to the directory where the input data lies.
 # main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
-main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\time_series__24163005')
+main_dir = Path(r'/Users/agnes_dchn/PycharmProjects/UncertaintyQuantificationHydrology/data')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
 # cast the index to a datetime object.
-inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
+inp_dfe = pd.read_csv(main_dir/'time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
 # Read the catchment area in meters squared. The first value is needed
 # only.
-cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
+cca_srs = pd.read_csv(main_dir/'area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
 
 tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
@@ -116,13 +116,10 @@ def obj_fun(prms, modl_objt, metric: str, diso):
 
 #==============================================================================
 # define function to store intermediate results
-
-
+save_data = [["Obj_fct_values","a","v","c","d","e","f","g","h","j","k","u","i","o","p","ü","ä","q","w","e","r","t","x","v"]]
 def callback(intermediate_result):
-    data = [intermediate_result.fun, *intermediate_result.x]
-    with open(r"C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\outputs_task1\output.csv", "a", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter=';')
-        writer.writerow(data)
+    save_data.append([intermediate_result.fun, *intermediate_result.x])
+
 
 #==============================================================================
 # produce plots
@@ -303,6 +300,8 @@ bounds_dict = {
         'lrr_dro': (0.00, 1.00),
     }
 
+
+
 # set metric that should be used
 metric = "nse"
 
@@ -313,13 +312,17 @@ metric = "nse"
 res = differential_evolution(func=obj_fun,  # function to be minimized
                              args=(modl_objt, metric, diso),  # fixed args for func
                              bounds=list(bounds_dict.values()),  # bounds on prms
-                             # maxiter=1,  # max number of iterations to be performed
+                            # maxiter=1,  # max number of iterations to be performed
                              callback=callback,  # write intermediate values to csv file
                              tol=0.01,  # stopping criterion
                              seed=10,  # make stochastic minimization reproducible
                              disp=True,  # print intermediate results
                              polish=False)  # always set this to false
 
+
+with open(main_dir / "output.csv", "w", newline="") as csvfile: # main_dir.read_text()
+    writer = csv.writer(csvfile, delimiter=';')
+    writer.writerows(save_data)
 # obtain fitted prms
 res_prms = res.x
 res_suc = res.success
@@ -336,7 +339,12 @@ print(f"number of iterations performed: {res.nit}")
 otps = modl_objt.get_outputs()
 diss = modl_objt.get_discharge()
 # obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output.csv", header=None)
-interm_res = pd.read_csv("C:\\Users\\lihel\\Documents\\MMUQ_Python_Setup\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\UncertaintyQuantificationHydrology\\outputs_task1\\output.csv", delimiter=';')
+interm_res = pd.read_csv("/Users/agnes_dchn/PycharmProjects/UncertaintyQuantificationHydrology/data/output.csv", delimiter=';')
 
-plot_output(otps, diss, diso, interm_res["Obj_fct_value"])
+plot_output(otps, diss, diso, interm_res['Obj_fct_values'])
+#####
+output_path = "/Users/agnes_dchn/PycharmProjects/UncertaintyQuantificationHydrology/data/simulated_discharge.csv"
+simulated_discharge_df = pd.DataFrame({"Time": inp_dfe.index, "Simulated_Discharge": diss})
+simulated_discharge_df.to_csv(output_path, sep=";", index=False)
 
+print(f"Simulated discharge data exported to: {output_path}")
