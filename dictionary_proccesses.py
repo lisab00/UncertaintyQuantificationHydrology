@@ -1,4 +1,4 @@
-# Boundaries for shutting off
+# Boundaries for shutting off and some comments
 bounds_dict_snw = {
         'snw_dth': (0.00, 0.00),  # set initial snow depth to 0
         'snw_ast': (-9999, -9999),  # set air snow temp very low
