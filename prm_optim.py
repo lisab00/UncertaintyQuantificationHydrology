@@ -1,7 +1,7 @@
 '''
 Created on 28.10.2024
 
-@author: hfran, lisa
+@author: hfran, lisa, agnes
 '''
 import os
 import sys
@@ -22,27 +22,26 @@ from hmg.models import hbv1d012a_py
 from hmg.test import aa_run_model
 from hmg import HBV1D012A
 
+import produce_plots
+
 #=============================================================================
 # data preparation
 
 # load data
-# Absolute path to the data directory in the git folder
+# insert here the absolute path to the git folder
+
 # main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
-main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology\data')
+main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
 # main_dir = Path(r'/Users/agnes_dchn/PycharmProjects/UncertaintyQuantificationHydrology/data')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
 # cast the index to a datetime object.
-# inp_dfe = pd.read_csv(main_dir / 'time_series___24163005.csv', sep=';', index_col=0)
-inp_dfe = pd.read_csv(main_dir / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)  # lisa version
-# inpp
+inp_dfe = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
-# Read the catchment area in meters squared. The first value is needed
-# only.
-# cca_srs = pd.read_csv(main_dir / 'area___24163005.csv', sep=';', index_col=0
-cca_srs = pd.read_csv(main_dir / 'time_series__24163005' / 'area___24163005.csv', sep=';', index_col=0)  # lisa
+# Read the catchment area in meters squared. The first value is needed only.
+cca_srs = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
 
 tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
@@ -133,50 +132,7 @@ def callback(intermediate_result):
     save_data.append([intermediate_result.fun, *intermediate_result.x])
 
 #==============================================================================
-# produce plots
-
-
-def plot_output(otps, diss, diso, obj_fct_values):
-    # Show a figure of the observed vs. simulated river flow.
-    fig = plt.figure()
-
-    plt.plot(inp_dfe.index, diso, label='REF', alpha=0.75)
-    plt.plot(inp_dfe.index, diss, label='SIM', alpha=0.75)
-
-    plt.grid()
-    plt.legend()
-
-    plt.xticks(rotation=45)
-
-    plt.xlabel('Time [hr]')
-    plt.ylabel('Discharge\n[$m^3.s^{-1}$]')
-
-    plt.title('Observed vs. Simulated River Flow')
-
-    plt.show()
-    plt.close(fig)
-
-    #==========================================================================
-    # Plot optimization curve
-    fig = plt.figure()
-
-    plt.plot(list(range(1, len(obj_fct_values) + 1)), obj_fct_values)
-
-    plt.grid()
-    plt.legend()
-
-    plt.xticks(rotation=45)
-
-    plt.xlabel('Optimization iteration')
-    plt.ylabel('Objective functionvalue')
-
-    plt.title('Plot of optimization progress')
-
-    plt.show()
-    plt.close(fig)
-
-#==============================================================================
-# main code
+# main code to perform parameter optimization
 
 
 # # preparations enabling proper work with model (explanations see aa_run_model)
@@ -226,20 +182,18 @@ bounds_dict = {
 metric = "nse"
 
 # # implement optimization using differential evolution algo
-# bevor each run make sure to update the path to csv file for intermediate results
-# in the callback function
 
 res = differential_evolution(func=obj_fun,  # function to be minimized
                              args=(modl_objt, metric, diso),  # fixed args for func
                              bounds=list(bounds_dict.values()),  # bounds on prms
-                             maxiter=1,  # max number of iterations to be performed
+                             # maxiter=1,  # max number of iterations to be performed
                              callback=callback,  # write intermediate values to csv file
                              tol=0.01,  # stopping criterion
                              seed=10,  # make stochastic minimization reproducible
                              disp=True,  # print intermediate results
                              polish=False)  # always set this to false
 
-with open(main_dir / "output.csv", "w", encoding="utf-8", newline="") as csvfile:  # main_dir.read_text()
+with open(main_dir / 'outputs_task1' / "output.csv", "w", encoding="utf-8", newline="") as csvfile:  # main_dir.read_text()
     writer = csv.writer(csvfile, delimiter=';')
     writer.writerows(save_data)
 
@@ -248,14 +202,6 @@ res_prms = res.x
 res_suc = res.success
 res_fun_val = 1 - res.fun
 
-# print outputs
-print(f"optimized prms: {res_prms}")
-print(f"success: {res_suc}")
-print(f"value of performance metric: {res_fun_val}")
-print(f"message: {res.message}")
-print(f"number of iterations performed: {res.nit}")
-print(f"optimization progress data exported to :{main_dir / 'output.csv'}")
-
 # get discharge simulated by model
 modl_objt.set_parameters(res.x)
 modl_objt.set_optimization_flag(0)
@@ -263,16 +209,25 @@ modl_objt.run_model()
 diss = modl_objt.get_discharge()
 
 simulated_discharge_df = pd.DataFrame({"Time": inp_dfe.index, "Simulated_Discharge": diss})
-simulated_discharge_df.to_csv(main_dir / 'simulated_discharge.csv', sep=";", index=False)
-print(f"Simulated discharge data exported to: {main_dir / 'simulated_discharge.csv'}")
+simulated_discharge_df.to_csv(main_dir / 'outputs_task1' / 'simulated_discharge.csv', sep=";", header=True, index=False)
 
-# interm_res = pd.read_csv(main_dir / 'output.csv', sep=';', index_col=0)
-# print(interm_res.head())
+# print outputs
+print(f"optimized prms: {res_prms}")
+print(f"success: {res_suc}")
+print(f"value of performance metric: {res_fun_val}")
+print(f"message: {res.message}")
+print(f"number of iterations performed: {res.nit}")
+print(f"optimization progress data exported to :{main_dir / 'output.csv'}")
+print(f"Simulated discharge data exported to: {main_dir / 'outputs_task1' / 'simulated_discharge.csv'}")
 
-# plot_output(otps, diss, diso, interm_res['Obj_fct_values'])
-#####
-'''output_path = "/Users/agnes_dchn/PycharmProjects/UncertaintyQuantificationHydrology/data/simulated_discharge.csv"
-simulated_discharge_df = pd.DataFrame({"Time": inp_dfe.index, "Simulated_Discharge": diss})
-simulated_discharge_df.to_csv(output_path, sep=";", index=False)
+#==============================================================================
+# produce plots
+# fill in the correct input files
 
-print(f"Simulated discharge data exported to: {output_path}")'''
+outputs = pd.read_csv(main_dir / 'outputs_task1' / 'output.csv' , sep=';')
+df_diss = pd.read_csv(main_dir / 'outputs_task1' / 'simulated_discharge.csv', sep=';')
+diss = df_diss['Simulated_Discharge']
+
+produce_plots.plot_fitted_curve(diss, diso, inp_dfe.index)
+produce_plots.plot_optim_curve(outputs['Obj_fct_values'])
+produce_plots.scatter_plot_parm(outputs, "urr_dth")
