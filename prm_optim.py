@@ -84,9 +84,13 @@ def sse(sim, obs):
 
 
 #=============================================================================
+# store intermediate values
+parameter_list = []
+objective_function_value_list = []
+
 # define objective function
 def obj_fun(prms, modl_objt, metric: str, diso):
-
+    parameter_list.append(prms) # save intermediate values
     # # read out metric string
     # Dictionary mapping string names to metric functions
     metrics = {
@@ -116,7 +120,9 @@ def obj_fun(prms, modl_objt, metric: str, diso):
     # compute obj value with current parms
     diss = modl_objt.get_discharge()
 
-    return metric_fun(diss, diso)
+    result = metric_fun(diss, diso)
+    objective_function_value_list.append(result)
+    return result
 
 
 #==============================================================================
@@ -189,7 +195,7 @@ res = differential_evolution(func=obj_fun,  # function to be minimized
                              # maxiter=1,  # max number of iterations to be performed
                              callback=callback,  # write intermediate values to csv file
                              tol=0.01,  # stopping criterion
-                             seed=10,  # make stochastic minimization reproducible
+                             seed=123,  # make stochastic minimization reproducible
                              disp=True,  # print intermediate results
                              polish=False)  # always set this to false
 
@@ -210,6 +216,11 @@ diss = modl_objt.get_discharge()
 
 simulated_discharge_df = pd.DataFrame({"Time": inp_dfe.index, "Simulated_Discharge": diss})
 simulated_discharge_df.to_csv(main_dir / 'outputs_task1' / 'simulated_discharge.csv', sep=";", header=True, index=False)
+
+# save each evaluation detailed
+simulated_discharge_df_detailed = pd.DataFrame({"objective_values": objective_function_value_list, "parameters": parameter_list})
+simulated_discharge_df_detailed.to_csv(main_dir / 'outputs_task1' / 'simulated_discharge_detailed.csv', header=None, index=False)
+
 
 # print outputs
 print(f"optimized prms: {res_prms}")
