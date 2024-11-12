@@ -6,10 +6,9 @@ Created on 06.11.2024
 import pandas as pd
 import matplotlib.pyplot as plt
 
-obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output.csv", header=None)
+obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output_obj.csv", header=None)
 
 obj_fct_values.columns = ["Obj_fct_value", "prm_value"]
-print(obj_fct_values.head())
 
 fig = plt.figure()
 
@@ -26,8 +25,13 @@ plt.ylabel('Objective functionvalue')
 plt.title('Plot of optimization progress')
 
 plt.show()
+fig.savefig(f'C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\diff_evo_nse_seed_123_iteration.png', bbox_inches='tight')
+
 plt.close(fig)
 
+obj_fct_values = pd.read_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_1\\output.csv", header=None)
+
+obj_fct_values.columns = ["Obj_fct_value", "prm_value"]
 df = pd.DataFrame(obj_fct_values['prm_value'])
 print(df.head())
 prm_names = [
@@ -73,20 +77,26 @@ df['prm_value'] = [[float(p) for p in prm] for prm in df['prm_value']]
 
 df[prm_names] = pd.DataFrame(df['prm_value'].tolist(), index=df.index)
 print(df.info())
+print(len(df[prm_names[0]]))
 
-fig = plt.figure()
+for i in range(len(prm_names)):
 
-plt.scatter(df['snw_amt'], obj_fct_values["Obj_fct_value"])
+    prm = prm_names[i]
+    fig = plt.figure()
 
-plt.grid()
-plt.legend()
+    plt.scatter(df[prm], obj_fct_values["Obj_fct_value"], alpha=0.5, s=0.5)
 
-plt.xticks(rotation=45)
+    plt.grid()
+    plt.legend()
 
-plt.xlabel('Parameter value of snw_amt')
-plt.ylabel('Objective function value')
+    plt.xticks(rotation=45)
 
-plt.title('Plot of optimization progress')
+    plt.xlabel(f'Parameter value of {prm}')
+    plt.ylabel('Log of Objective function value')
+    plt.yscale('log')
 
-plt.show()
-plt.close(fig)
+    plt.title('Parameter values during optimization')
+
+    fig.savefig(f'C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\diff_evo_nse_prm_values_seed_123_{prm}_log.png', bbox_inches='tight')
+    plt.close(fig)
+
