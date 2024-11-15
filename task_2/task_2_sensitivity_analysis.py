@@ -298,7 +298,10 @@ changed_param_output = []
 def change_all_params(last_prm_value, change_value, metric):
     for i in range(0, len(last_prm_value)):
         print(i)
-        prms = change_parameter_vector(i, last_prm_value, change_value)
+        old_prm = last_prm_value.iloc[i]
+        prm = change_parameter_vector(i, last_prm_value, change_value)
+        last_prm_value.iloc[i] = prm
+        prms = last_prm_value
         new_obj_function = objective_function_value(np.array(prms.values, dtype=float), modl_objt, metric, diso)
 
         otps = modl_objt.get_outputs()
@@ -308,8 +311,8 @@ def change_all_params(last_prm_value, change_value, metric):
         output_dict = {
             "changed_parameter": prm_names[i],
             'param_changed_by': change_value,
-            'old_param_value': last_prm_value.iloc[i],
-            'new_param_value': prms.iloc[i],
+            'old_param_value': old_prm,
+            'new_param_value': prm,
             'param_bounds': bound_for_param,
             # TODO belongs to which process?
             'old_best_obj_fct_value': last_objective_function,
