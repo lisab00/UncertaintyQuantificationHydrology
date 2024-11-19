@@ -119,7 +119,6 @@ iterations_df = pd.read_csv(main_dir / "outputs_task1" / "csv_outputs" / "output
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
 # get best objective function value
 last_objective_function = iterations_df['Obj_fct_value'].iloc[-1]
-print(last_objective_function)
 df = pd.DataFrame(iterations_df['prm_value'])
 
 df['prm_value'] = df['prm_value'].str.replace("[ ", "")
@@ -223,8 +222,8 @@ if __name__ == "__main__":
     otps_lbls = modl_objt.get_output_labels()
     metric = "nse"
 
-    # create loop to try out percentual changes between [-20%,+20%] in steps of 1%
-    change_values = np.arange(0.8, 1.2 + 0.01, 0.01)
+    # create loop to try out percentual changes between [-20%,+20%] in steps of 0.5%
+    change_values = np.arange(0.8, 1.2 + 0.005, 0.005)
 
     for change_value in change_values:
         change_all_params(last_prm_values, change_value, metric)
