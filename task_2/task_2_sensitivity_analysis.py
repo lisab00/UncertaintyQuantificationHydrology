@@ -289,7 +289,7 @@ def change_parameter_vector(i, last_prm_value, change_value):
     elif last_prm_value.iloc[i] < bound_for_param[0]:
         last_prm_value.iloc[i] = bound_for_param[0]
 
-    return last_prm_value
+    return last_prm_value.iloc[i]
 
 
 changed_param_output = []
