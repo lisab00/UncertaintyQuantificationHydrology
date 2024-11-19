@@ -45,7 +45,7 @@ bounds_dict_soil0 = {
         'sl0_bt0': (0.00, 0.00), # wie schnell der Boden Wasser aufnimmt
         # niedriger Wert für dazu uf, was zu schnellerem Abfluss und weniger Verdunstung führen kann.
 
-        'sl1_pwp': (0.00, 4e+2),
+        'sl1_pwp': (0.00, 4e+2), # should be zero, as they arenot used if soil 0 is turned off
         'sl1_fcy': (0.00, 4e+2),
         'sl1_bt0': (0.00, 4.00),
 
@@ -116,12 +116,13 @@ bounds_dict_urr = {
         'urr_dth': (0, 0), # initial water level in upper reservoir
         'lrr_dth': (0.00, 5.00),
 
-        'urr_rsr': (0, 0), # Runoff Split Factor, höherer Wert bedeutet mehr schneller Abfluss
+        'urr_rsr': (1, 1), # müsste auf 1, damit es in gleicher zeitschritt abfließt, Runoff Split Factor, höherer Wert bedeutet mehr schneller Abfluss am gleichen Tag
         'urr_tdh': (0, 0), # Beginn des schnellen Abflusses,
         'urr_tdr': (0, 0), # höherer Wert dieser Konstante bewirkt, dass das Wasser länger im Reservoir verbleibt, bevor schneller Abfluss
         'urr_cst': (1, 1), # Faktor für die Geschwindigkeit, if 0.8 -> 80% will come out of the reservoir
         'urr_dro': (1, 1), # Verhältnis Wasservolumen, dass abfliest, how much is "surface water" of the water which comes out
-        'urr_ulc': (0, 0), # upper lower constant, i think how much , es fließt dadurch nichts ins untere reservoir, sondern alles in den abfluss
+        'urr_ulc': (1, 1), # Versickerungsrate, müsste auf 1
+    #upper lower constant, i think how much , es fließt dadurch nichts ins untere reservoir, sondern alles in den abfluss
 
         'lrr_tdh': (0.00, 1e+4),
         'lrr_cst': (0.00, 1.00),
@@ -153,9 +154,9 @@ bounds_dict_lrr = {
     'urr_tdr': (0.00, 1.00),
     'urr_cst': (0.00, 1.00),
     'urr_dro': (0.00, 1.00),
-    'urr_ulc': (0.00, 1.00),
+    'urr_ulc': (0, 0), # muss hier auch auf null, da man nichts versickert haben möchte
 
-    'lrr_tdh': (0, 0), #Schwellentiefe bestimmt, ab welchem Füllstand des Reservoirs Wasser abfließen kann
-    'lrr_cst': (1, 1), # wie schnell oder langsam, sehr hohen Wert: Beschleunigt den Abfluss, sodass er direkt erfolgt.
-    'lrr_dro': (1, 1), #Discharge Ratio führt dazu, dass ein größerer Anteil des Wassers aus dem Reservoir abgeführt wird,
+    'lrr_tdh': (0, 0), #wichtigste in diesem Szenario, Schwellentiefe bestimmt, ab welchem Füllstand des Reservoirs Wasser abfließen kann
+    'lrr_cst': (0, 0), # auch auf null, da , wie schnell oder langsam, sehr hohen Wert: Beschleunigt den Abfluss, sodass er direkt erfolgt.
+    'lrr_dro': (0, 0), #Discharge Ratio führt dazu, dass ein größerer Anteil des Wassers aus dem Reservoir abgeführt wird,
 }
