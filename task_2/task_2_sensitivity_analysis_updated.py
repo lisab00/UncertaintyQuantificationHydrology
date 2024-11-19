@@ -11,12 +11,16 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
+import csv
 
 from collections import defaultdict
 
 from hmg.models import hbv1d012a_py
 from hmg.test import aa_run_model
 from hmg import HBV1D012A
+
+random.seed(123)
 
 # main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
 main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
@@ -169,118 +173,6 @@ def objective_function_value(prms, modl_objt, metric: str, diso):
     return result
 
 
-def plot_output(otps, diss, diso, prm_name, change_value):
-    # Show a figure of the observed vs. simulated river flow.
-    fig = plt.figure()
-
-    plt.plot(inp_dfe.index, diso, label='REF', alpha=0.75)
-    plt.plot(inp_dfe.index, diss, label='SIM', alpha=0.75)
-
-    plt.grid()
-    plt.legend()
-
-    plt.xticks(rotation=45)
-
-    plt.xlabel('Time [hr]')
-    plt.ylabel('Discharge\n[$m^3.s^{-1}$]')
-
-    plt.title('Observed vs. Simulated River Flow')
-
-    # plt.show()
-    fig.savefig(f"C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_2\\diss_{prm_name}_changed_by_{change_value}.png", bbox_inches='tight')
-
-    plt.close(fig)
-    #===========================================================================
-
-    # Show a figure of some of the internally simulated variables of the model.
-    # This also serves as a diagnostic tool to check whether what is simulated
-    # makes sense or not.
-    fig, axs = plt.subplots(9, 1, figsize=(4, 8), dpi=120, sharex=True)
-
-    (axs_tem,
-     axs_ppt,
-     axs_snw,
-     axs_sl0,
-     axs_sl1,
-     axs_etn,
-     axs_rrr,
-     axs_rnf,
-     axs_bal) = axs
-    #===========================================================================
-
-    # Inputs.
-    axs_tem.plot(inp_dfe['tavg__ref'], alpha=0.85)
-    axs_tem.set_ylabel('TEM\n[°C]')
-
-    axs_ppt.plot(inp_dfe['pptn__ref'], alpha=0.85)
-    axs_ppt.set_ylabel('PPT\n[mm]')
-    #===========================================================================
-
-    # Snow depth.
-    axs_snw.plot(inp_dfe.index, otps[:, otps_lbls['snw_dth']], alpha=0.85)
-    axs_snw.set_ylabel('SNW\n[mm]')
-    #===========================================================================
-
-    # Mositure level in both soil layers.
-    axs_sl0.plot(inp_dfe.index, otps[:, otps_lbls['sl0_mse']], alpha=0.85)
-    axs_sl0.set_ylabel('SL0\n[mm]')
-
-    axs_sl1.plot(inp_dfe.index, otps[:, otps_lbls['sl1_mse']], alpha=0.85)
-    axs_sl1.set_ylabel('SL1\n[mm]')
-    #===========================================================================
-
-    # Potential and simulated evapotranspiration.
-    axs_etn.plot(inp_dfe.index, inp_dfe['petn__ref'], label='PET', alpha=0.85)
-
-    axs_etn.plot(
-        inp_dfe.index, otps[:, otps_lbls['sl1_etn']], label='ETN', alpha=0.85)
-
-    axs_etn.set_ylabel('ETN\n[mm]')
-    axs_etn.legend()
-    #===========================================================================
-
-    # Depth of water in the upper and lower reservoirs.
-    axs_rrr.plot(
-        inp_dfe.index, otps[:, otps_lbls['urr_dth']], label='URR', alpha=0.85)
-
-    axs_rrr.plot(
-        inp_dfe.index, otps[:, otps_lbls['lrr_dth']], label='LRR', alpha=0.85)
-
-    axs_rrr.set_ylabel('DTH\n[mm]')
-    axs_rrr.legend()
-    #===========================================================================
-
-    # Surface and underground runoff.
-    axs_rnf.plot(
-        inp_dfe.index, otps[:, otps_lbls['rnf_sfc']], label='SFC', alpha=0.85)
-
-    axs_rnf.plot(
-        inp_dfe.index, otps[:, otps_lbls['rnf_gnd']], label='GND', alpha=0.85)
-
-    axs_rnf.set_ylabel('RNF\n[mm]')
-    axs_rnf.legend()
-    #===========================================================================
-
-    # Water balance time series at each time step.
-    # Should be close to zero.
-    axs_bal.plot(inp_dfe.index, otps[:, otps_lbls['mod_bal']], alpha=0.85)
-    axs_bal.set_ylabel('BAL\n[mm]')
-    #===========================================================================
-
-    # Some other makeup.
-    for ax in axs: ax.grid()
-
-    axs[-1].set_xlabel('Time [hr]')
-
-    plt.xticks(rotation=45)
-
-    plt.suptitle('Inputs, and internally simulated variables of HBV')
-    # plt.show()
-    fig.savefig(f"C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_2\\diss_{prm_name}_changed_by_{change_value}_2.png", bbox_inches='tight')
-
-    plt.close(fig)
-
-
 def change_parameter_vector(i, last_prm_value, change_value):
     last_prm_value.iloc[i] = last_prm_value.iloc[i] * change_value
 
@@ -297,47 +189,30 @@ def change_parameter_vector(i, last_prm_value, change_value):
 
     return last_prm_value
 
-
-changed_param_output = []
-
-# the keys of this dicts are the indices of the parameters
-# the values are the new parameter after changing (_prm_changes_), and the ofv
-# the changed prm produces (_ofv_changes)
-# per param index we will plot these against each other
+'''the keys of this dicts are the indices of the parameters
+the values are the new parameter after changing (_prm_changes), and the ofv
+that the changed prm produces (_ofv_changes).
+per param index we will plot these against each other'''
 all_perc_prm_changes = defaultdict(list)
 all_perc_ofv_changes = defaultdict(list)
 
 
 def change_all_params(last_prm_value, change_value, metric):
+
     for i in range(0, len(last_prm_value)):
-        print(i)
-        old_prm = last_prm_value.iloc[i]
-        prm = change_parameter_vector(i, last_prm_value, change_value)
-        last_prm_value.iloc[i] = prm
-        all_perc_prm_changes[i].append(prm)  # append new value for param i
-        prms = last_prm_value
-        new_obj_function = objective_function_value(np.array(prms.values, dtype=float), modl_objt, metric, diso)
+
+        # copy of orig prms, bc we want to keep original last_prm_value for next iteration
+        updated_prms = last_prm_value.copy()
+
+        # update chosen parm in the vector
+        updated_prms = change_parameter_vector(i, updated_prms, change_value)
+
+        # compute ofv with new set of prm
+        new_obj_function = objective_function_value(np.array(updated_prms.values, dtype=float), modl_objt, metric, diso)
+
+        # store
+        all_perc_prm_changes[i].append(updated_prms[i])  # append new value for param i
         all_perc_ofv_changes[i].append(new_obj_function)  # append new ofv for param i
-
-        '''otps = modl_objt.get_outputs()
-        diss = modl_objt.get_discharge()
-
-        bound_for_param = bounds_dict[prm_names[i]]
-        output_dict = {
-            "changed_parameter": prm_names[i],
-            'param_changed_to': change_value,
-            'old_param_value': old_prm,
-            'new_param_value': prm,
-            'param_bounds': bound_for_param,
-            # TODO belongs to which process?
-            'old_best_obj_fct_value': last_objective_function,
-            'new_obj_fct_value_after_change': new_obj_function,
-            'change_of_obj_fct_new/old': new_obj_function / last_objective_function,
-
-            }
-        print(output_dict)
-        changed_param_output.append(output_dict)
-        plot_output(otps, diss, diso, prm_names[i], change_value)'''
 
 
 if __name__ == "__main__":
@@ -348,39 +223,41 @@ if __name__ == "__main__":
     otps_lbls = modl_objt.get_output_labels()
     metric = "nse"
 
-    # create loop to try out percentual changes between [-20%,+20%] in steps of 2%
-    change_values = np.arange(0.8, 1.2 + 0.02, 0.02)
+    # create loop to try out percentual changes between [-20%,+20%] in steps of 1%
+    change_values = np.arange(0.8, 1.2 + 0.01, 0.01)
 
     for change_value in change_values:
         change_all_params(last_prm_values, change_value, metric)
 
+    # store data in csv to use for plots
+    df_prms = pd.DataFrame.from_dict(all_perc_prm_changes)
+    df_prms.to_csv(main_dir / 'task_2' / 'all_prm_changes.csv', index=False, sep=';')
+    df_ofv = pd.DataFrame.from_dict(all_perc_ofv_changes)
+    df_ofv.to_csv(main_dir / 'task_2' / 'all_ofv_changes.csv', index=False, sep=';')
+
     # create one output dict with the most significant change per parameter
     cumulated_output = []
 
-    for i in range(0, len(last_prm_value)):
+    for i in range(0, len(last_prm_values)):
 
-        # determine which percentual prm change caused the greatest change in ofv
-        # we can pick largest value bec. new ofv will never be better, i.e. lower, than best ofv
-        greatest_ofv = max(all_perc_ofv_changes[i])
-        greatest_change_index = all_perc_ofv_changes[i].index(greatest_ofv)
+            # determine which percentual prm change caused the greatest change in ofv
+            # we can pick largest value bec. new ofv will never be better, i.e. lower, than best ofv
+            greatest_ofv = max(all_perc_ofv_changes[i])
+            greatest_change_index = all_perc_ofv_changes[i].index(greatest_ofv)
 
-        all_output_dict = {
-            'changed_parameter': prm_names[i],
-            'param_mult_by': change_values[greatest_change_index],
-            'old_param_value': last_prm_value.iloc[i],
-            'new_param_value': all_perc_prm_changes[i][greatest_change_index],
-            'param_bounds': bounds_dict[prm_names[i]],
-            'old_best_obj_fct_value': last_objective_function,
-            'new_obj_fct_value_after_change': greatest_ofv,
-            'change_of_obj_fct_new/old': greatest_ofv / last_objective_function,
-            }
+            all_output_dict = {
+                'changed_parameter': prm_names[i],
+                'param_mult_by': change_values[greatest_change_index],
+                'old_param_value': last_prm_values.iloc[i],
+                'new_param_value': all_perc_prm_changes[i][greatest_change_index],
+                'param_bounds': bounds_dict[prm_names[i]],
+                'old_best_obj_fct_value': last_objective_function,
+                'new_obj_fct_value_after_change': greatest_ofv,
+                'change_of_obj_fct_new/old': greatest_ofv / last_objective_function,
+                }
 
-        print(all_output_dict)
-        cumulated_output.append(all_output_dict)
+            cumulated_output.append(all_output_dict)
 
     df = pd.DataFrame.from_dict(cumulated_output)
-    df.to_csv(main_dir / 'task_2' / 'cumulated_output.csv', index=False)
-
-    # df = pd.DataFrame.from_dict(changed_param_output)
-    # df.to_csv("C:\\Users\\hfran\\Documents\\Uni\\Master\\hydrology\\MMUQ_Python_Setup\\EclipsePortable426\\Data\\mmuq_ws2425\\hmg\\data\\task_2\\output.csv", index=False)
-
+    df.to_csv(main_dir / 'task_2' / 'cumulated_output.csv', index=False, sep=';')
+    print(f"Output printed to: {main_dir / 'task_2' / 'cumulated_output.csv'}")
