@@ -83,6 +83,8 @@ for prm_index in range(len(prm_names)):
     plt.axhline(y=true_ofv, color='orange', linestyle='--', linewidth=1.5, label='True objective value')
     plt.axvline(x=true_prm, color='green', linestyle='--', linewidth=1.5, label='True parameter value')
 
+    plt.ylim(0.08, 0.17)
+
     plt.grid()
     plt.legend()
     plt.xticks(rotation=45)
@@ -90,11 +92,11 @@ for prm_index in range(len(prm_names)):
     plt.ylabel('Objective function value')
     plt.title(f'Plot sensitivity of {prm_name}')
 
-    fig.savefig(main_dir / 'task_2' / 'plots' / f'{prm_name}_sensitivity.png', bbox_inches='tight')
+    fig.savefig(main_dir / 'task_2' / 'plots' / f'{prm_name}_scaled_sensitivity.png', bbox_inches='tight')
 
     plt.close(fig)
 
-# scatter plot highest in normal scale
+'''# scatter plot highest in normal scale
 fig = plt.figure()
 
 plt.scatter(df_cumulated_output['changed_parameter'], df_cumulated_output['new_obj_fct_value_after_change'])
@@ -130,3 +132,4 @@ plt.title('Parameters vs. worst objective function values')
 
 fig.savefig(main_dir / 'task_2' / 'plots' / 'scatter_log_scale.png', bbox_inches='tight')
 plt.close(fig)
+'''
