@@ -23,6 +23,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 from hmg.models import hbv1d012a_py
 from hmg.test import aa_run_model
@@ -125,6 +126,7 @@ bounds_dict = {  # new global prm bounds on moodle
 # iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
+
 # get best objective function value
 last_objective_function = iterations_df['Obj_fct_value'].iloc[-1]
 df = pd.DataFrame(iterations_df['prm_value'])
@@ -136,6 +138,7 @@ df['prm_value'] = df['prm_value'].str.split()
 df['prm_value'] = [[float(p) for p in prm] for prm in df['prm_value']]
 
 df[prm_names] = pd.DataFrame(df['prm_value'].tolist(), index=df.index)
+
 # get best parameter vector
 last_prm_values = df.iloc[-1]
 last_prm_values = last_prm_values.drop('prm_value')
@@ -145,6 +148,20 @@ def nse(sim, obs):
     '''Nash-Suttcliffe Efficiency'''
     # return 1-nse ne nse to make minimization work
     return 1 - (1 - (np.sum((obs - sim) ** 2) / np.sum((obs - np.mean(obs)) ** 2)))
+
+
+def generate_bounds_dict(last_prm_values, percent=0.2):
+    mod_dict = {}
+    bounds_keys = list(bounds_dict.keys())
+
+    for prm in bounds_keys:
+        i = bounds_keys.index(prm)
+        mod_dict[prm] = tuple(sorted((
+            change_parameter_vector(i, last_prm_values.copy(), 1 - percent),
+            change_parameter_vector(i, last_prm_values.copy(), 1 + percent)
+            )))
+
+    return mod_dict
 
 
 def objective_function_value(prms, modl_objt, metric: str, diso):
@@ -181,9 +198,8 @@ def objective_function_value(prms, modl_objt, metric: str, diso):
 
 
 def change_parameter_vector(i, last_prm_value, change_value):
-    print(last_prm_value.iloc[i])
+
     last_prm_value.iloc[i] = last_prm_value.iloc[i] * change_value
-    print(last_prm_value.iloc[i])
     # check if new param value is in bounds!
     # if not set to upper / lower bound
 
@@ -198,21 +214,21 @@ def change_parameter_vector(i, last_prm_value, change_value):
     return last_prm_value.iloc[i]
 
 
-def generate_sobol_samples(dim, num_samples):
+def generate_sobol_samples(dim, num_samples, bounds):
 
     num_cols = dim
     matrix = np.zeros((num_samples, num_cols))
 
-    for i, (low, high) in enumerate(bounds_dict.values()):
+    for i, (low, high) in enumerate(bounds.values()):
         matrix[:, i] = np.random.uniform(low, high, size=num_samples)
 
     return matrix
 
 
-def compute_sobol_indices(model, num_samples, dim):
+def compute_sobol_indices(model, num_samples, dim, bounds):
     # Generate Sobol samples
-    A = generate_sobol_samples(dim, num_samples)
-    B = generate_sobol_samples(dim, num_samples)
+    A = generate_sobol_samples(dim, num_samples, bounds)
+    B = generate_sobol_samples(dim, num_samples, bounds)
 
     Y_A = np.zeros(num_samples)
     Y_B = np.zeros(num_samples)
@@ -275,21 +291,35 @@ def plot_sobol_indices(S_first, S_total):
     plt.show()
 
     # Save plot
-    # fig.savefig(main_dir / 'task_3' / 'plots' / 'sobol_indices', bbox_inches='tight')
+    fig.savefig(main_dir / 'task_3' / 'plots' / 'sobol_indices_10000_range20_nse', bbox_inches='tight')
 
 
 if __name__ == "__main__":
+
+    start_time = time.time()
+
     modl_objt = HBV1D012A()
     modl_objt.set_inputs(tems, ppts, pets)
     modl_objt.set_outputs(tsps)
     modl_objt.set_discharge_scaler(dslr)
     otps_lbls = modl_objt.get_output_labels()
     metric = "nse"
-    print(bounds_dict.values)
-    print(type(bounds_dict.values))
 
-    num_samples = 10
+    num_samples = 2
     dim = len(prm_names)
-    S_first, S_total = compute_sobol_indices(objective_function_value, num_samples, dim)
-    print(S_first, S_total)
+
+    # bounds = bounds_dict
+    bounds = generate_bounds_dict(last_prm_values, 0.2)
+
+    S_first, S_total = compute_sobol_indices(objective_function_value,
+                                             num_samples,
+                                             dim,
+                                             bounds)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    print(f"S_i: {S_first}, \n S_Ti: {S_total}")
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
+
     plot_sobol_indices(S_first, S_total)
