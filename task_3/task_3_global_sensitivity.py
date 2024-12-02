@@ -2,6 +2,7 @@
 Created on 29.11.2024
 
 @author: hfran
+@author: lisa
 '''
 
 # goal: compute sobol indices
@@ -126,7 +127,6 @@ iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
 # get best objective function value
 last_objective_function = iterations_df['Obj_fct_value'].iloc[-1]
-print(last_objective_function)
 df = pd.DataFrame(iterations_df['prm_value'])
 
 df['prm_value'] = df['prm_value'].str.replace("[ ", "")
@@ -139,7 +139,6 @@ df[prm_names] = pd.DataFrame(df['prm_value'].tolist(), index=df.index)
 # get best parameter vector
 last_prm_values = df.iloc[-1]
 last_prm_values = last_prm_values.drop('prm_value')
-print(last_prm_values)
 
 
 def nse(sim, obs):
@@ -245,7 +244,6 @@ def compute_sobol_indices(model, num_samples, dim):
 
         # First-order index calculation
         S_first[i] = (np.mean(Y_A * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
-        print(Y_B)
 
         # Total-order index calculation
         S_total[i] = 1 - (np.mean(Y_B * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
@@ -290,7 +288,7 @@ if __name__ == "__main__":
     print(bounds_dict.values)
     print(type(bounds_dict.values))
 
-    num_samples = 20
+    num_samples = 10
     dim = len(prm_names)
     S_first, S_total = compute_sobol_indices(objective_function_value, num_samples, dim)
     print(S_first, S_total)
