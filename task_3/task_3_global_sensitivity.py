@@ -29,17 +29,20 @@ from hmg import HBV1D012A
 
 np.random.seed(123)
 
-main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+# main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
 # cast the index to a datetime object.
-inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
+# inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
+inp_dfe = pd.read_csv(r'data\time_series__24163005\time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
 # Read the catchment area in meters squared. The first value is needed
 # only.
-cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
+# cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
+cca_srs = pd.read_csv(r'data\time_series__24163005\area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
 
 tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
@@ -85,8 +88,8 @@ prm_names = [
 
     ]
 
-bounds_dict = {
-       'snw_dth': (0.00, 0.00),
+bounds_dict = {  # new global prm bounds on moodle
+        'snw_dth': (0.00, 10.0),
         'snw_ast': (-1.0, +1.0),
         'snw_amt': (-0.0, +2.0),
         'snw_amf': (0.00, 2.00),
@@ -95,12 +98,12 @@ bounds_dict = {
         'sl0_mse': (0.00, 1e+2),
         'sl1_mse': (0.00, 2e+2),
 
-        'sl0_fcy': (0.00, 2e+2),
-        'sl0_bt0': (0.00, 3.0),
+        'sl0_fcy': (5.00, 4e+1),
+        'sl0_bt0': (1.00, 6.00),
 
-        'sl1_pwp': (0.00, 4e+2),
-        'sl1_fcy': (0.00, 4e+2),
-        'sl1_bt0': (0.00, 4.00),
+        'sl1_pwp': (1.00, 2e+2),
+        'sl1_fcy': (1e+2, 4e+2),
+        'sl1_bt0': (1.00, 3.00),
 
         'urr_dth': (0.00, 2e+1),
         'lrr_dth': (0.00, 5.00),
@@ -108,17 +111,18 @@ bounds_dict = {
         'urr_rsr': (0.00, 1.00),
         'urr_tdh': (0.00, 1e+2),
         'urr_tdr': (0.00, 1.00),
-        'urr_cst': (0.00, 1.00),
-        'urr_dro': (0.00, 1.00),
+        'urr_cst': (1e-4, 1.00),
+        'urr_dro': (1.00, 1.00),
         'urr_ulc': (0.00, 1.00),
 
-        'lrr_tdh': (0.00, 1e+4),
+        'lrr_tdh': (5e+2, 1e+4),
         'lrr_cst': (0.00, 1.00),
         'lrr_dro': (0.00, 1.00),
         }
 
 # import optimised parameter vector from Task 1
-iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+# iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
 # get best objective function value
 last_objective_function = iterations_df['Obj_fct_value'].iloc[-1]
@@ -221,43 +225,31 @@ def compute_sobol_indices(model, num_samples, dim):
         Y_A[i] = y_A
         Y_B[i] = y_B
 
-    # Calculate the mean and variance of the model output
+    # Calculate the mean of the model output
     f02 = np.mean(Y_A) * np.mean(Y_B)
-    V = np.var(Y_A)
 
     # First-order and total-order Sobol indices
     S_first = np.zeros(dim)
     S_total = np.zeros(dim)
 
     for i in range(dim):
-        # Create matrices A_Bi and B_Ai (swapping columns)
-        A_Bi = np.copy(A)
+        # Create matrices B_Ai (swapping columns)
         B_Ai = np.copy(B)
-
-        A_Bi[:, i] = B[:, i]
         B_Ai[:, i] = A[:, i]
-
-        Y_ABi = np.zeros(num_samples)
         Y_BAi = np.zeros(num_samples)
 
         # Evaluate the function for the modified matrices
         for j in range(num_samples):
-            y_ABi = model(A_Bi[j,:], modl_objt, metric, diso)
-            Y_ABi[j] = y_ABi
             y_BAi = model(B_Ai[j,:], modl_objt, metric, diso)
             Y_BAi[j] = y_BAi
 
         # First-order index calculation
-        # S_first[i] = np.mean(Y_B * (Y_ABi - Y_A))  # wrong
-
-        S_first[i] = (np.mean((Y_A * Y_BAi) - f02)) / (np.mean((Y_A * Y_A) - f02))
+        S_first[i] = (np.mean(Y_A * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
         print(Y_B)
-        print(Y_ABi - Y_A)
-        # Total-order index calculation
-        # S_total[i] = (np.mean(Y_A * (Y_A - Y_ABi)))  # wrong
-        S_total[i] = 1 - (np.mean((Y_B * Y_BAi) - f02)) / (np.mean((Y_A * Y_A) - f02))
 
-    print(S_first)
+        # Total-order index calculation
+        S_total[i] = 1 - (np.mean(Y_B * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
+
     return S_first, S_total
 
 
@@ -284,6 +276,9 @@ def plot_sobol_indices(S_first, S_total):
     # Display the plot
     plt.show()
 
+    # Save plot
+    # fig.savefig(main_dir / 'task_3' / 'plots' / 'sobol_indices', bbox_inches='tight')
+
 
 if __name__ == "__main__":
     modl_objt = HBV1D012A()
@@ -295,7 +290,7 @@ if __name__ == "__main__":
     print(bounds_dict.values)
     print(type(bounds_dict.values))
 
-    num_samples = 10000
+    num_samples = 20
     dim = len(prm_names)
     S_first, S_total = compute_sobol_indices(objective_function_value, num_samples, dim)
     print(S_first, S_total)
