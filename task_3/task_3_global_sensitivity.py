@@ -23,7 +23,6 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import time
 
 from hmg.models import hbv1d012a_py
 from hmg.test import aa_run_model
@@ -31,26 +30,28 @@ from hmg import HBV1D012A
 
 np.random.seed(123)
 
-# main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
-main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
+main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+# main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
 # cast the index to a datetime object.
-# inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
-inp_dfe = pd.read_csv(r'data\time_series__24163005\time_series___24163005.csv', sep=';', index_col=0)
+inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
+# inp_dfe = pd.read_csv(r'data\time_series__24163005\time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
 # Read the catchment area in meters squared. The first value is needed
 # only.
-# cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
-cca_srs = pd.read_csv(r'data\time_series__24163005\area___24163005.csv', sep=';', index_col=0)
+cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
+# cca_srs = pd.read_csv(r'data\time_series__24163005\area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
 
 tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
 ppts = inp_dfe.loc[:, 'pptn__ref'].values  # Preciptiation.
 pets = inp_dfe.loc[:, 'petn__ref'].values  # PET.
 diso = inp_dfe.loc[:, 'diso__ref'].values  # Observed discharge.
+
+diso_log = np.log(diso)
 
 tsps = tems.shape[0]  # Number of time steps.
 
@@ -123,10 +124,9 @@ bounds_dict = {  # new global prm bounds on moodle
         }
 
 # import optimised parameter vector from Task 1
-# iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
-iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+# iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
-
 # get best objective function value
 last_objective_function = iterations_df['Obj_fct_value'].iloc[-1]
 df = pd.DataFrame(iterations_df['prm_value'])
@@ -138,7 +138,6 @@ df['prm_value'] = df['prm_value'].str.split()
 df['prm_value'] = [[float(p) for p in prm] for prm in df['prm_value']]
 
 df[prm_names] = pd.DataFrame(df['prm_value'].tolist(), index=df.index)
-
 # get best parameter vector
 last_prm_values = df.iloc[-1]
 last_prm_values = last_prm_values.drop('prm_value')
@@ -148,20 +147,6 @@ def nse(sim, obs):
     '''Nash-Suttcliffe Efficiency'''
     # return 1-nse ne nse to make minimization work
     return 1 - (1 - (np.sum((obs - sim) ** 2) / np.sum((obs - np.mean(obs)) ** 2)))
-
-
-def generate_bounds_dict(last_prm_values, percent=0.2):
-    mod_dict = {}
-    bounds_keys = list(bounds_dict.keys())
-
-    for prm in bounds_keys:
-        i = bounds_keys.index(prm)
-        mod_dict[prm] = tuple(sorted((
-            change_parameter_vector(i, last_prm_values.copy(), 1 - percent),
-            change_parameter_vector(i, last_prm_values.copy(), 1 + percent)
-            )))
-
-    return mod_dict
 
 
 def objective_function_value(prms, modl_objt, metric: str, diso):
@@ -193,13 +178,17 @@ def objective_function_value(prms, modl_objt, metric: str, diso):
 
     # compute obj value with current parms
     diss = modl_objt.get_discharge()
-    result = metric_fun(diss, diso)
+    diss_idx = np.where(diss == 0)
+    diss[diss_idx] = 0.001
+    diss_log = np.log(diss)
+    result = metric_fun(diss_log, diso)
     return result
 
 
 def change_parameter_vector(i, last_prm_value, change_value):
-
+    print(last_prm_value.iloc[i])
     last_prm_value.iloc[i] = last_prm_value.iloc[i] * change_value
+    print(last_prm_value.iloc[i])
     # check if new param value is in bounds!
     # if not set to upper / lower bound
 
@@ -214,29 +203,29 @@ def change_parameter_vector(i, last_prm_value, change_value):
     return last_prm_value.iloc[i]
 
 
-def generate_sobol_samples(dim, num_samples, bounds):
+def generate_sobol_samples(dim, num_samples):
 
     num_cols = dim
     matrix = np.zeros((num_samples, num_cols))
 
-    for i, (low, high) in enumerate(bounds.values()):
+    for i, (low, high) in enumerate(bounds_dict.values()):
         matrix[:, i] = np.random.uniform(low, high, size=num_samples)
 
     return matrix
 
 
-def compute_sobol_indices(model, num_samples, dim, bounds):
+def compute_sobol_indices(model, num_samples, dim):
     # Generate Sobol samples
-    A = generate_sobol_samples(dim, num_samples, bounds)
-    B = generate_sobol_samples(dim, num_samples, bounds)
+    A = generate_sobol_samples(dim, num_samples)
+    B = generate_sobol_samples(dim, num_samples)
 
     Y_A = np.zeros(num_samples)
     Y_B = np.zeros(num_samples)
 
     # Evaluate the model at the generated samples
     for i in range(num_samples):
-        y_A = model(A[i,:], modl_objt, metric, diso)
-        y_B = model(B[i,:], modl_objt, metric, diso)
+        y_A = model(A[i,:], modl_objt, metric, diso_log)
+        y_B = model(B[i,:], modl_objt, metric, diso_log)
         Y_A[i] = y_A
         Y_B[i] = y_B
 
@@ -250,19 +239,37 @@ def compute_sobol_indices(model, num_samples, dim, bounds):
     for i in range(dim):
         # Create matrices B_Ai (swapping columns)
         B_Ai = np.copy(B)
+        A_Bi = np.copy(A)
+        A_Bi[:, i] = B[:, i]
         B_Ai[:, i] = A[:, i]
         Y_BAi = np.zeros(num_samples)
+        Y_ABi = np.zeros(num_samples)
 
         # Evaluate the function for the modified matrices
         for j in range(num_samples):
-            y_BAi = model(B_Ai[j,:], modl_objt, metric, diso)
-            Y_BAi[j] = y_BAi
+            # y_BAi = model(B_Ai[j,:], modl_objt, metric, diso_log)
+            y_ABi = model(A_Bi[j,:], modl_objt, metric, diso_log)
+            Y_ABi[j] = y_ABi
+            # Y_BAi[j] = y_BAi
+
+        # formel b und f durch varianz von y teilen
+        # os.getpid(), Manager, Pool, ThreadPool, Queue
 
         # First-order index calculation
-        S_first[i] = (np.mean(Y_A * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
+        # S_first[i] = (np.mean(Y_A * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
+
+        total_y = np.concatenate((Y_A, Y_B), axis=0)
+        print(total_y)
+        var_y = np.var(total_y)
+
+        S_first[i] = (np.mean(Y_B * (Y_ABi - Y_A))) / (var_y)
 
         # Total-order index calculation
-        S_total[i] = 1 - (np.mean(Y_B * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
+        # S_total[i] = 1 - (np.mean(Y_B * Y_BAi) - f02) / (np.mean(Y_A * Y_A) - f02)
+
+        S_total[i] = (0.5 * np.mean((Y_A - Y_ABi) ** 2)) / (var_y)
+
+        print(i)
 
     return S_first, S_total
 
@@ -291,35 +298,21 @@ def plot_sobol_indices(S_first, S_total):
     plt.show()
 
     # Save plot
-    fig.savefig(main_dir / 'task_3' / 'plots' / 'sobol_indices_10000_range20_nse', bbox_inches='tight')
+    # fig.savefig(main_dir / 'task_3' / 'plots' / 'sobol_indices', bbox_inches='tight')
 
 
 if __name__ == "__main__":
-
-    start_time = time.time()
-
     modl_objt = HBV1D012A()
     modl_objt.set_inputs(tems, ppts, pets)
     modl_objt.set_outputs(tsps)
     modl_objt.set_discharge_scaler(dslr)
     otps_lbls = modl_objt.get_output_labels()
     metric = "nse"
+    print(bounds_dict.values)
+    print(type(bounds_dict.values))
 
     num_samples = 2
     dim = len(prm_names)
-
-    # bounds = bounds_dict
-    bounds = generate_bounds_dict(last_prm_values, 0.2)
-
-    S_first, S_total = compute_sobol_indices(objective_function_value,
-                                             num_samples,
-                                             dim,
-                                             bounds)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-
-    print(f"S_i: {S_first}, \n S_Ti: {S_total}")
-    print(f"Elapsed time: {elapsed_time:.2f} seconds")
-
+    S_first, S_total = compute_sobol_indices(objective_function_value, num_samples, dim)
+    print(S_first, S_total)
     plot_sobol_indices(S_first, S_total)
