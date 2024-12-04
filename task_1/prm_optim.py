@@ -27,6 +27,8 @@ from hmg import HBV1D012A
 
 import produce_plots
 
+np.random.seed(123)
+
 #=============================================================================
 # data preparation
 
