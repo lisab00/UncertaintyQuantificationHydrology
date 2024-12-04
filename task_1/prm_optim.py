@@ -224,8 +224,8 @@ simulated_discharge_df = pd.DataFrame({"Time": inp_dfe.index, "Simulated_Dischar
 simulated_discharge_df.to_csv(main_dir / 'task_1' / 'outputs_task1' / 'simulated_discharge.csv', sep=";", header=True, index=False)
 
 # save each evaluation detailed
-simulated_discharge_df_detailed = pd.DataFrame({"objective_values": objective_function_value_list, "parameters": parameter_list})
-simulated_discharge_df_detailed.to_csv(main_dir / 'task_1' / 'outputs_task1' / 'simulated_discharge_detailed.csv', header=None, index=False)
+output_df_detailed = pd.DataFrame({"objective_values": objective_function_value_list, "parameters": parameter_list})
+output_df_detailed.to_csv(main_dir / 'task_1' / 'outputs_task1' / 'output_detailed.csv', header=None, index=False)
 
 # print outputs
 print(f"optimized prms: {res_prms}")
