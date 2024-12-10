@@ -32,19 +32,19 @@ from hmg import HBV1D012A
 np.random.seed(123)
 
 # main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
-main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
+main_dir = Path(r'/Users/agnes_dchn/PycharmProjects/UncertaintyQuantificationHydrology')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
 # cast the index to a datetime object.
 # inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
-inp_dfe = pd.read_csv(r'data\time_series__24163005\time_series___24163005.csv', sep=';', index_col=0)
+inp_dfe = pd.read_csv(r'data/time_series__24163005/time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
 # Read the catchment area in meters squared. The first value is needed
 # only.
 # cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
-cca_srs = pd.read_csv(r'data\time_series__24163005\area___24163005.csv', sep=';', index_col=0)
+cca_srs = pd.read_csv(r'data/time_series__24163005/area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
 
 tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
@@ -198,10 +198,10 @@ def objective_function_value(prms, modl_objt, metric: str, diso):
     diss = modl_objt.get_discharge()
     result = metric_fun(diss, diso)
 
-    '''diss_idx = np.where(diss == 0)
-    diss[diss_idx] = 0.001
-    diss_log = np.log(diss)
-    result = metric_fun(diss, diso_log)'''
+    #diss_idx = np.where(diss == 0)
+    #diss[diss_idx] = 0.001
+    #diss_log = np.log(diss)
+    #result = metric_fun(diss_log, diso_log)
     return result
 
 
@@ -322,17 +322,17 @@ if __name__ == "__main__":
     otps_lbls = modl_objt.get_output_labels()
     metric = "nse"
 
-    num_samples = 2
+    num_samples = 50000
     dim = len(prm_names)
 
     # set bounds
-    # bounds = bounds_dict
-    bounds = generate_bounds_dict(last_prm_values, 0.2)
+    bounds = bounds_dict
+    #bounds = generate_bounds_dict(last_prm_values, 0.2)
 
     # set diso
-    dis_obs = diso
+    #dis_obs = diso
     # diso for lognse metric (also manually adapt to diso_log in "objective_function_value")
-    # dis_obs = diso_log
+    dis_obs = diso_log
 
     S_first, S_total = compute_sobol_indices(objective_function_value,
                                              num_samples,

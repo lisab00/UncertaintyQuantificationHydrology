@@ -118,8 +118,8 @@ bounds_dict_urr = {
 
         'urr_rsr': (1, 1), # müsste auf 1, damit es in gleicher zeitschritt abfließt, Runoff Split Factor, höherer Wert bedeutet mehr schneller Abfluss am gleichen Tag
         'urr_tdh': (0, 0), # Beginn des schnellen Abflusses,
-        'urr_tdr': (0, 0), # höherer Wert dieser Konstante bewirkt, dass das Wasser länger im Reservoir verbleibt, bevor schneller Abfluss
-        'urr_cst': (1, 1), # Faktor für die Geschwindigkeit, if 0.8 -> 80% will come out of the reservoir
+        'urr_tdr': (0, 0), # tritt ein, wenn wassermenge über dem threshold (urr_tdh) ist: anteil der menge des wassers, welches abfluss wird (wenn der Eimer voll ist, wie viel überschwappt, abfluss wird
+        'urr_cst': (1, 1), # wenn wassermenge unter dem threshold (urr_thd) ist, wie viel von der wassermenge abfluss wird, if 0.8 -> 80% will come out of the reservoir
         'urr_dro': (1, 1), # Verhältnis Wasservolumen, dass abfliest, how much is "surface water" of the water which comes out
         'urr_ulc': (1, 1), # Versickerungsrate, müsste auf 1
     #upper lower constant, i think how much , es fließt dadurch nichts ins untere reservoir, sondern alles in den abfluss
