@@ -72,7 +72,7 @@ df_cumulated_output = pd.read_csv(main_dir / 'task_2' / 'cumulated_output_0.05.c
 # # produce all plots
 
 # plots for each prm
-'''for prm_index in range(len(prm_names)):
+for prm_index in range(len(prm_names)):
 
     true_prm = last_prm_values.iloc[prm_index]
     prm_name = prm_names[prm_index]
@@ -94,7 +94,7 @@ df_cumulated_output = pd.read_csv(main_dir / 'task_2' / 'cumulated_output_0.05.c
 
     fig.savefig(main_dir / 'task_2' / 'plots' / f'{prm_name}_scaled_sensitivity.png', bbox_inches='tight')
 
-    plt.close(fig)'''
+    plt.close(fig)
 
 # scatter plot highest in normal scale
 fig, ax = plt.subplots(figsize=(12, 6))
