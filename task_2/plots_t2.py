@@ -106,9 +106,11 @@ ax.scatter(df_cumulated_output['changed_parameter'],
 ax.grid(True, linestyle='--', alpha=0.6)
 ax.legend()
 ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels
-ax.set_xlabel('Parameters', fontsize=12, labelpad=10)
-ax.set_ylabel('bjective function values', fontsize=12, labelpad=10)
-ax.set_title('Parameters vs. worst objective values', fontsize=14, pad=15)
+ax.set_xlabel('Parameters', fontsize=14, labelpad=10)
+ax.set_ylabel('Objective function values', fontsize=14, labelpad=10)
+ax.set_title('Parameters vs. worst objective values', fontsize=16, pad=15)
+ax.tick_params(axis='both', which='major', labelsize=12)  # Increase tick label font size
+
 plt.tight_layout()
 fig.savefig(main_dir / 'task_2' / 'plots' / 'scatter.png', bbox_inches='tight')
 plt.show()
@@ -125,9 +127,11 @@ plt.yscale('log')
 ax.grid(True, linestyle='--', alpha=0.6)
 ax.legend()
 ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels
-ax.set_xlabel('Parameters', fontsize=12, labelpad=10)
-ax.set_ylabel('Worst objective function values in log-scale', fontsize=12, labelpad=10)
-ax.set_title('Parameters vs. worst objective values', fontsize=14, pad=15)
+ax.set_xlabel('Parameters', fontsize=14, labelpad=10)
+ax.set_ylabel('Objective function values in log-scale', fontsize=14, labelpad=10)
+ax.set_title('Parameters vs. worst objective values', fontsize=16, pad=15)
+ax.tick_params(axis='both', which='major', labelsize=12)  # Increase tick label font size
+
 plt.tight_layout()
 fig.savefig(main_dir / 'task_2' / 'plots' / 'scatter_log_scale.png', bbox_inches='tight')
 plt.show()
