@@ -45,7 +45,7 @@ prm_names = [
     ]
 
 # import optimised parameter vector from Task 1
-iterations_df = pd.read_csv(main_dir / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
 
 # get best objective function value
@@ -96,40 +96,43 @@ for prm_index in range(len(prm_names)):
 
     plt.close(fig)
 
-'''# scatter plot highest in normal scale
-fig = plt.figure()
+# scatter plot highest in normal scale
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.axhline(y=true_ofv, color='orange', linestyle='--', linewidth=1.5,
+           label='True objective value', zorder=1)
+ax.scatter(df_cumulated_output['changed_parameter'],
+           df_cumulated_output['new_obj_fct_value_after_change'], color='blue',
+           alpha=0.7, label='Worst objective function values', zorder=2)
+ax.grid(True, linestyle='--', alpha=0.6)
+ax.legend()
+ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels
+ax.set_xlabel('Parameters', fontsize=14, labelpad=10)
+ax.set_ylabel('Objective function values', fontsize=14, labelpad=10)
+ax.set_title('Parameters vs. worst objective values', fontsize=16, pad=15)
+ax.tick_params(axis='both', which='major', labelsize=12)  # Increase tick label font size
 
-plt.scatter(df_cumulated_output['changed_parameter'], df_cumulated_output['new_obj_fct_value_after_change'])
-
-plt.grid()
-plt.legend()
-
-plt.xticks(rotation=45)
-
-plt.xlabel('Parameters')
-plt.ylabel('Objective function values')
-
-plt.title('Parameters vs. worst objective function values')
-
+plt.tight_layout()
 fig.savefig(main_dir / 'task_2' / 'plots' / 'scatter.png', bbox_inches='tight')
+plt.show()
 plt.close(fig)
 
 # scatter plot highest in log scale
-fig = plt.figure()
-
-plt.scatter(df_cumulated_output['changed_parameter'], df_cumulated_output['new_obj_fct_value_after_change'])
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.axhline(y=true_ofv, color='orange', linestyle='--', linewidth=1.5,
+           label='True objective value', zorder=1)
+ax.scatter(df_cumulated_output['changed_parameter'],
+           df_cumulated_output['new_obj_fct_value_after_change'], color='blue',
+           alpha=0.7, label='Worst objective function values', zorder=2)
 plt.yscale('log')
+ax.grid(True, linestyle='--', alpha=0.6)
+ax.legend()
+ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels
+ax.set_xlabel('Parameters', fontsize=14, labelpad=10)
+ax.set_ylabel('Objective function values in log-scale', fontsize=14, labelpad=10)
+ax.set_title('Parameters vs. worst objective values', fontsize=16, pad=15)
+ax.tick_params(axis='both', which='major', labelsize=12)  # Increase tick label font size
 
-plt.grid()
-plt.legend()
-
-plt.xticks(rotation=45)
-
-plt.xlabel('Parameters')
-plt.ylabel('Objective function values (log-scale)')
-
-plt.title('Parameters vs. worst objective function values')
-
+plt.tight_layout()
 fig.savefig(main_dir / 'task_2' / 'plots' / 'scatter_log_scale.png', bbox_inches='tight')
+plt.show()
 plt.close(fig)
-'''
