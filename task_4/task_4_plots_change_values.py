@@ -67,7 +67,7 @@ def plot_ofv_vs_change(ofvs, opt: bool):
     '''
 
     plt.scatter(change_values, ofvs)
-    plt.axhline(y=0.906, color='orange', linestyle='--', linewidth=2.5, label='Optimal OFV of original time series')
+    plt.axhline(y=0.91334, color='orange', linestyle='--', linewidth=2.5, label='Optimal OFV of original time series')
     plt.legend()
     plt.xlabel('Factor of parameter perturbation')
 
@@ -162,7 +162,7 @@ def barplot_top_three(df):
     df['difference'] = df['new_ofv_old_params'] - df['new_opt_ofv']
     highest = df.nlargest(1, 'difference')
     print(highest)
-    y_values = [float(highest['new_ofv_old_params'].values[0]), float(highest['new_opt_ofv'].values[0]), 0.086]
+    y_values = [1 - float(highest['new_ofv_old_params'].values[0]), 1 - float(highest['new_opt_ofv'].values[0]), 1 - 0.086]
     x_values = ['New ofv before recal.', 'New ofv after recal.', 'Original ofv']
     fig, ax = plt.subplots()
     ax.bar(x_values, y_values)
