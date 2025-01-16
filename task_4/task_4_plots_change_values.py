@@ -11,7 +11,7 @@ plots for task 4
 '''
 
 import numpy as np
-# import seaborn as sns
+import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -55,7 +55,7 @@ def plot_perturbed_time_series():
     for ax in axs: ax.grid()
     axs[-1].set_xlabel('Time [hr]')
     plt.xticks(rotation=45)
-    plt.suptitle('Toller Titel tbd')
+    plt.suptitle('Highest changes in TMP and PPT')
     # plt.show()
     fig.savefig(main_dir / 'task_4' / 'plots' / 'perturbed_time_series.png', bbox_inches='tight')
     plt.close(fig)
@@ -67,7 +67,7 @@ def plot_ofv_vs_change(ofvs, opt: bool):
     '''
 
     plt.scatter(change_values, ofvs)
-    plt.axhline(y=0.908, color='orange', linestyle='--', linewidth=2.5, label='Optimal OFV of original time series')
+    plt.axhline(y=0.906, color='orange', linestyle='--', linewidth=2.5, label='Optimal OFV of original time series')
     plt.legend()
     plt.xlabel('Factor of parameter perturbation')
 
@@ -158,6 +158,20 @@ def violin_plot_all(new_opt_prms, prm_names, flag=False):
     plt.close(fig)
 
 
+def barplot_top_three(df):
+    df['difference'] = df['new_ofv_old_params'] - df['new_opt_ofv']
+    highest = df.nlargest(1, 'difference')
+    print(highest)
+    y_values = [float(highest['new_ofv_old_params'].values[0]), float(highest['new_opt_ofv'].values[0]), 0.086]
+    x_values = ['New ofv before recal.', 'New ofv after recal.', 'Original ofv']
+    fig, ax = plt.subplots()
+    ax.bar(x_values, y_values)
+    ax.set_title(f"Change of ofv for change value {round(float(highest['change_value_inputs'].values[0]),2)}")
+    # plt.show()
+    fig.savefig(main_dir / 'task_4' / 'plots' / 'barplot_highest_diffeerence.png', bbox_inches='tight')
+    plt.close(fig)
+
+
 def violin_plot_prm(prm_name: str, prm_values, prm_optimized: float):
 
     sns.violinplot(data=prm_values)
@@ -232,3 +246,5 @@ if __name__ == "__main__":
     violin_plot_all(new_opt_prms, prm_names, True)
 
     print("script finished without errors")
+
+    barplot_top_three(df_change_value_inputs)
