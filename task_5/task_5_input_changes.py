@@ -347,22 +347,32 @@ def PolyCoefficients(x, coeffs):
     return y
 
 
+def abs_error(diss, diso, error_bound):
+    """returns true, if the maximum of abs(diss-diso) > 1mm
+    returns false if stopping criterion is reached
+    """
+    return np.abs(diss - diso) > error_bound
+
+
 if __name__ == "__main__":
 
     # fit_power_eq()
 
-    error = 10
+    error_bound = np.full(len(diso), 0.1)  # abs distance max 1mm
     list_params = []
     ddho = ddho - h0_initial
     i = 0
-    while error > 1:
+
+    error = True
+    while error:  # True when error is too high
         i += 1
         print(i)
         params, polynomial = fit_polynomial(i)
         print(polynomial(ddho))
+        error = abs_error(polynomial(ddho), diso, error_bound)
 
-        error = rmse(polynomial(ddho), diso)
-        print(error)
+        if i % 20 == 0:
+            print(i)
 
     print(params)
 
