@@ -23,7 +23,7 @@ import csv
 from collections import defaultdict
 from scipy.optimize import differential_evolution
 
-from hmg.models import hbv1d012a_py
+from hmg.models import hbv1d012a_cy
 from hmg.test import aa_run_model
 from hmg import HBV1D012A
 
@@ -186,18 +186,41 @@ per param index we will plot these against each other'''
 all_perc_prm_changes = defaultdict(list)
 all_perc_ofv_changes = defaultdict(list)
 
-change_value_inputs = []
+change_value_tems = []
+change_value_ppts = []
 new_ofv = []
 new_opt_params = []
 new_opt_ofv = []
+tems_vector = []
+ppts_vector = []
 
 
 def change_series_and_compute_ofv(metric="nse"):
+    tems_new = []
+    ppts_new = []
 
-    change_value = np.random.uniform(0.75, 1.25)
+    # change ppts
+    n = len(ppts)
+    change_vector = np.random.uniform(-0.25, 0.25, n)
+    print(len(change_vector))
+    change_value_ppts.append(change_vector)
+    print(change_vector)
+    print(change_vector[36])
+    ppts_new = ppts + ppts * change_vector
+    print(ppts[36])
 
-    tems_new = tems * change_value
-    ppts_new = ppts * change_value
+    print(len(ppts_new))
+    print(ppts_new[36])
+
+    ppts_vector.append(ppts_new)
+    print(np.shape(ppts_vector))
+
+    # change tems
+    n = len(tems)
+    change_vector = np.random.uniform(-2, +2, n)
+    change_value_tems.append(change_vector)
+    tems_new = tems + change_vector
+    tems_vector.append(tems_new)
 
     modl_objt = HBV1D012A()
     modl_objt.set_inputs(tems_new, ppts_new, pets)
@@ -209,7 +232,7 @@ def change_series_and_compute_ofv(metric="nse"):
     new_obj_function = objective_function_value(np.array(last_prm_values.values, dtype=float), modl_objt, metric, diso)
 
     # store
-    change_value_inputs.append(change_value)
+
     new_ofv.append(new_obj_function)
 
     # optimize parameters again
@@ -239,12 +262,32 @@ def change_series_and_compute_ofv(metric="nse"):
 
 
 if __name__ == "__main__":
+    np.random.seed(123)
 
-    for i in range(20):
+    for i in range(2000):
         change_series_and_compute_ofv()
 
+    output_df_tems = change_value_tems
+
     # store data in csv to use for plots
-    output_df = pd.DataFrame({'change_value_inputs': change_value_inputs, 'new_ofv_old_params': new_ofv,
-                               'new_opt_params': new_opt_params, 'new_opt_ofv': new_opt_ofv})
+    output_df = pd.DataFrame({'new_ofv_old_params': new_ofv,
+                               'new_opt_params': new_opt_params,
+                               'new_opt_ofv': new_opt_ofv})
+    # print(len(output_df['change_value_ppts'][1]))
+    output_tems = pd.DataFrame(tems_vector)
+    output_tems.columns = range(output_tems.shape[1])
+    output_tems.to_csv(main_dir / 'task_4' / 'output_tems.csv')
+    output_ppts = pd.DataFrame(ppts_vector)
+    output_ppts.columns = range(output_ppts.shape[1])
+    output_ppts.to_csv(main_dir / 'task_4' / 'output_ppts.csv')
+
+    output_change_ppts = pd.DataFrame(change_value_ppts)
+    output_change_ppts.columns = range(output_change_ppts.shape[1])
+    output_change_ppts.to_csv(main_dir / 'task_4' / 'output_change_ppts.csv')
+
+    output_change_tems = pd.DataFrame(change_value_tems)
+    output_change_tems.columns = range(output_change_tems.shape[1])
+    output_change_tems.to_csv(main_dir / 'task_4' / 'output_change_tems.csv')
+
     # output_df['relative_ofv_change'] = output_df['new_ofv'] / last_objective_function
-    output_df.to_csv(main_dir / 'task_4' / 'input_changes.csv', index=False, sep=';')
+    output_df.to_csv(main_dir / 'task_4' / 'input_changes.csv')
