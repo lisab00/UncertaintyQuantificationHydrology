@@ -16,7 +16,7 @@ inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 ddho = inp_dfe.loc[:, 'ddho__ref'].values
 diso = inp_dfe.loc[:, 'diso__ref'].values
 
-# Ensure ddho is sorted (required for PPoly)
+# ensure ddho is sorted (required for PPoly)
 sorted_indices = np.argsort(ddho)
 ddho = ddho[sorted_indices]
 diso = diso[sorted_indices]
@@ -28,9 +28,9 @@ diso_s1 = diso[:i]
 diso_s2 = diso[i:]
 ddho_s2 = ddho[i:]
 
-# fit curves for each interval
-coeffs_s1 = np.polyfit(ddho_s1, diso_s1, deg=2)
-coeffs_s2 = np.polyfit(ddho_s2, diso_s2, deg=2)
+# fit curves for each interval (fix: both poly must have same degree rn)
+coeffs_s1 = np.polyfit(ddho_s1, diso_s1, deg=4)
+coeffs_s2 = np.polyfit(ddho_s2, diso_s2, deg=4)
 coeffs = np.array([coeffs_s1, coeffs_s2]).T
 
 # analyze fit of seperate curves
@@ -38,7 +38,7 @@ P1 = PPoly(np.array([coeffs_s1]).T, [ddho[0], ddho[i]])
 P2 = PPoly(np.array([coeffs_s2]).T, [ddho[i], ddho[-1]])
 plt.scatter(ddho, diso, label="Observed Data", color="blue", alpha=0.2, s=5)
 plt.plot(ddho_s1, P1(ddho_s1), color="red")
-# plt.plot(ddho_s2, P2(ddho_s2), color="green")
+plt.plot(ddho_s2, P2(ddho_s2), color="green")
 plt.show()
 
 # align the two curves in one PPoly object
