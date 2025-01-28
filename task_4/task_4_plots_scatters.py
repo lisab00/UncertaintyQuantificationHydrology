@@ -17,11 +17,12 @@ df_inp_ch = pd.read_csv(main_dir / "task_4" / "output" / "input_changes.csv", in
 ofv_old = 1 - df_inp_ch["new_ofv_old_params"]
 ofv_recal = 1 - df_inp_ch["new_opt_ofv"]
 
+fig = plt.figure()
 plt.scatter(ofv_old, ofv_recal)
 plt.title("Compare perturbed against recalibrated NSE")
 plt.xlabel("Perturbed NSE before recalibration")
 plt.ylabel("Recalibrated NSE")
 plt.show()
-plt.savefig(main_dir / 'task_4' / 'plots' / 'ofv_scatter_old_recal.png', bbox_inches='tight')
-plt.close()
+fig.savefig(main_dir / 'task_4' / 'plots' / 'ofv_scatter_old_recal.png', bbox_inches='tight')
+plt.close(fig)
 
