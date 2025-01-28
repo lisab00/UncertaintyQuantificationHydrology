@@ -29,26 +29,26 @@ from collections import defaultdict
 from scipy.optimize import differential_evolution
 from scipy.optimize import curve_fit
 
-from hmg.models import hbv1d012a_cy
-from hmg.test import aa_run_model
+# from hmg.models import hbv1d012a_cy
+# from hmg.test import aa_run_model
 from hmg import HBV1D012A
 
 random.seed(123)
 
-main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
-# main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
+# main_dir = Path(r'C:\Users\hfran\Documents\Uni\Master\hydrology\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\data')
+main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
 os.chdir(main_dir)
 
 # Read input text time series as a pandas Dataframe object and
 # cast the index to a datetime object.
-inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
-# inp_dfe = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)
+# inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
+inp_dfe = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
 # Read the catchment area in meters squared. The first value is needed
 # only.
-cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
-# cca_srs = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'area___24163005.csv', sep=';', index_col=0)
+# cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
+cca_srs = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
 
 tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
@@ -128,8 +128,8 @@ bounds_dict = {
         }
 
 # import optimised parameter vector from Task 1
-iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
-# iterations_df = pd.read_csv(main_dir / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+# iterations_df = pd.read_csv(main_dir / "task_1" / "output_one_per_iteration_tol_0.01_seed_123.csv")
+iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
 # get best objective function value
 last_objective_function = iterations_df['Obj_fct_value'].iloc[-1]
@@ -348,10 +348,13 @@ def PolyCoefficients(x, coeffs):
 
 
 def abs_error(diss, diso, error_bound):
-    """returns true, if the maximum of abs(diss-diso) > 1mm
-    returns false if stopping criterion is reached
+    """returns true, if the maximum of abs(diss-diso) <= 1mm
+    returns false if stopping criterion is not reached
     """
-    return np.abs(diss - diso) > error_bound
+    abs_dist = np.abs(diss - diso)
+    print(f"abs_dist = {abs_dist}")
+    print(np.all(abs_dist <= error_bound))
+    return np.all(abs_dist <= error_bound)
 
 
 if __name__ == "__main__":
@@ -363,16 +366,13 @@ if __name__ == "__main__":
     ddho = ddho - h0_initial
     i = 0
 
-    error = True
-    while error:  # True when error is too high
+    error = False
+    while error == False:  # False when error is too high
         i += 1
         print(i)
         params, polynomial = fit_polynomial(i)
         print(polynomial(ddho))
         error = abs_error(polynomial(ddho), diso, error_bound)
-
-        if i % 20 == 0:
-            print(i)
 
     print(params)
 
