@@ -10,10 +10,6 @@ import csv
 main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
 
 
-def compute_disp():
-    pass
-
-
 def abs_error(diss, diso, error_bound):
     """returns true, if the maximum of abs(diss-diso) <= 1mm
     returns false if stopping criterion is not reached
@@ -31,6 +27,9 @@ if __name__ == "__main__":
 
     ddho = inp_dfe.loc[:, 'ddho__ref'].values
     diso = inp_dfe.loc[:, 'diso__ref'].values
+
+    plt.scatter(ddho, diso, label="Observed Data", color="blue", alpha=0.2, s=5)
+    plt.show()
 
     # ensure ddho is sorted (required for PPoly)
     sorted_indices = np.argsort(ddho)
@@ -57,10 +56,10 @@ if __name__ == "__main__":
     diso = np.delete(diso, outlier_indices)
     print(f"len ddho: {len(ddho)}")
 
-    '''plt.plot(ddho, np.polyval(coeffs_complete_fit, ddho), color="red")
+    plt.plot(ddho, np.polyval(coeffs_complete_fit, ddho), color="red")
     plt.scatter(ddho, diso, label="Observed Data", color="blue", alpha=0.2, s=5)
     plt.show()
-    '''
+
     # define intervals for fitted curves: ddho in [0,430), [430,end)
     i = (np.abs(ddho - 430)).argmin()
     ddho_s1 = ddho[:i + 1]
@@ -91,8 +90,8 @@ if __name__ == "__main__":
     disp = np.concatenate((disp_s1, disp_s2_concate))
 
     # analyze fit of seperate curves
-    plt.plot(ddho_s1, disp_s1, color="red")
-    plt.plot(ddho_s2, disp_s2, color="green")
+    plt.plot(ddho_s1, disp_s1, color="red", label="Fitted segment 1")
+    plt.plot(ddho_s2, disp_s2, color="orange", label="Fitted segment 2")
     plt.scatter(ddho, diso, label="Observed Data", color="blue", alpha=0.2, s=5)
     plt.xlabel("Depth (h)")
     plt.ylabel("Discharge (Q)")
