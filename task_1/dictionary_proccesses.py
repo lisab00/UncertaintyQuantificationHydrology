@@ -117,7 +117,7 @@ bounds_dict_urr = {
         'lrr_dth': (0.00, 5.00),
 
         'urr_rsr': (0, 0), # müsste auf 1, damit es in gleicher zeitschritt abfließt, Runoff Split Factor, höherer Wert bedeutet mehr schneller Abfluss am gleichen Tag
-        # im Model schauen, ob null oder eins
+        # im Model schauen, ob null oder eins: ist 0 !!
         'urr_tdh': (1E6, 1E6), # maximum depth the reseroivr can hold, 10^6, damit es nie aktiviert wird, damit nicht über threshold kommt und es keinen Zwischenabfluss
         'urr_tdr': (0, 0), # tritt ein, wenn wassermenge über dem threshold (urr_tdh) ist: anteil der menge des wassers, welches abfluss wird (wenn der Eimer voll ist, wie viel überschwappt, abfluss wird
         'urr_cst': (0, 0), # wenn wassermenge unter dem threshold (urr_thd) ist, wie viel von der wassermenge abfluss wird, if 0.8 -> 80% will come out of the reservoir
