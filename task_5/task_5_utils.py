@@ -12,7 +12,7 @@ def compute_disp(ddho, coeffs):
     '''evaluate power function on ddho and return predicted discharge disp
     input should be perturbed ddho
     '''
-    i = (np.abs(ddho - 430)).argmin()
+    i = (np.abs(ddho - 432)).argmin()
     disp_s1 = np.polyval(coeffs[0], ddho[:i + 1])
     disp_s2 = np.polyval(coeffs[1], ddho[i:])
     disp_s2_concate = np.delete(disp_s2, 0)
@@ -23,9 +23,9 @@ def compute_disp(ddho, coeffs):
 def compute_coeffs(ddho, diso, degree, num_outliers=55):
     '''returns coeffs for rating curve
     inputs are original ddho / diso time series
-    put i as: i = (np.abs(ddho - 430)).argmin()
+    put i as: i = (np.abs(ddho - 432)).argmin()
     '''
-    i = (np.abs(ddho - 430)).argmin()
+    i = (np.abs(ddho - 432)).argmin()
 
     # define intervals for fitted curves
     ddho_s1 = ddho[:i + 1]
@@ -67,7 +67,6 @@ diso = np.delete(diso, outlier_indices)
 
 # decide on degree and index for power function. do this once to obtain coeffs
 degree = 12
-# i = (np.abs(ddho - 430)).argmin()
 coeffs = compute_coeffs(ddho, diso, degree)
 print(coeffs)
 
