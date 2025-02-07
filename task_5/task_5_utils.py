@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import random
 import csv
 
+'''this script performs a piecewise fit of the rating curve, checks its error
+and its monotonicity and plots it against the original input data
+'''
+
 
 def compute_disp(ddho, coeffs):
     '''evaluate power function on ddho and return predicted discharge disp
@@ -119,8 +123,8 @@ if __name__ == "__main__":
     ddho_s2_extended = np.concatenate((ddho_s2, post_s2))
     disp_s2_extended = np.polyval(coeffs[1], ddho_s2_extended)
 
-    plt.plot(ddho_s1_extended, disp_s1_extended, color="red", label="Fitted segment 1")
-    plt.plot(ddho_s2_extended, disp_s2_extended, color="orange", label="Fitted segment 2")
+    plt.plot(ddho_s1_extended, disp_s1_extended, color="red", label="Polynomial of degree 5")
+    plt.plot(ddho_s2_extended, disp_s2_extended, color="orange", label="Polynomial of degree 19")
     plt.scatter(ddho, diso, label="Observed Data", color="blue", alpha=0.2, s=5)
     plt.xlabel("Depth (h)")
     plt.ylabel("Discharge (Q)")
