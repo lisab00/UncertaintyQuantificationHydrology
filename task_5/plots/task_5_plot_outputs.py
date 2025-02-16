@@ -11,11 +11,24 @@ df = pd.read_csv(main_dir / "data" / "time_series__24163005" / "time_series___24
 print(df.head())
 
 # read input data from task 5
-df_pert_ddho = pd.read_csv(main_dir / "task_5" / "output" / "output_ddho.csv", index_col=0)
+df_pert_ddho = pd.read_csv(main_dir / "task_5" / "output" / "output_ddho_lisa_redone.csv", index_col=0)
 
 #=============================================================================
 # plot cdf of perturbed ddho series
-'''for i in np.arange(len(df_pert_ppts)):
+
+'''# outliers removal
+ddho = df["ddho__ref"]
+diso = df["diso__ref"]
+sorted_indices = np.argsort(ddho)
+ddho = ddho[sorted_indices]
+diso = diso[sorted_indices]
+residuals = abs(diso - np.polyval(np.polyfit(ddho, diso, deg=12), ddho))
+res_sorted_indices = np.argsort(-residuals)
+num_outliers = 55  # visual analysis
+outlier_indices = res_sorted_indices[:num_outliers]
+ddho = np.delete(ddho, outlier_indices)
+
+for i in np.arange(len(df_pert_ddho)):
     if i == 0:
         sns.kdeplot(df_pert_ddho.iloc[i], cumulative=True, alpha=0.5, color='orange', label='perturbed', linewidth=3)
     else:
@@ -27,7 +40,7 @@ df_pert_ddho = pd.read_csv(main_dir / "task_5" / "output" / "output_ddho.csv", i
     if i % 100 == 0:
         print(f"{i} plots created")
 
-sns.kdeplot(df["ddho__ref"], cumulative=True, color="blue", label="original", linewidth=1)
+sns.kdeplot(ddho, cumulative=True, color="blue", label="original", linewidth=1)
 plt.legend()
 plt.show()'''
 
@@ -36,23 +49,24 @@ plt.show()'''
 
 iterations_df = pd.read_csv(main_dir / "task_1" / "outputs_task1" / "csv_outputs" / "output_one_per_iteration_tol_0.01_seed_123.csv")
 iterations_df.columns = ["Obj_fct_value", "prm_value"]
-'''ofv_true = iterations_df["Obj_fct_value"].iloc[-1]
+ofv_true = iterations_df["Obj_fct_value"].iloc[-1]
 
 # read input data from task 5
-df_inp_ch = pd.read_csv(main_dir / "task_5" / "output" / "input_changes.csv", index_col=0)
+df_inp_ch = pd.read_csv(main_dir / "task_5" / "output" / "input_changes_lisa_redone_v2.csv", index_col=0)
+print(df_inp_ch["new_opt_ofv"])
 
 sns.kdeplot(1 - df_inp_ch["new_opt_ofv"], cumulative=True, color="blue", label="recalibrated")
-plt.axvline(1 - ofv_true, color="orange", linestyle="--", label="reference OFV")
+plt.axvline(1 - ofv_true, color="orange", linestyle="--", label="reference NSE")
 plt.title("Reference NSE and recalibrated NSEs")
 plt.xlabel("NSEs")
 plt.ylabel("Cumulative distribution function")
 plt.legend()
-plt.show()'''
+plt.show()
 
 #=============================================================================
 # plot prm cdfs
 
-prm_names = [
+'''prm_names = [
         'snw_dth',
         'snw_ast',
         'snw_amt',
@@ -86,7 +100,7 @@ prm_names = [
     ]
 
 prm_val_true = iterations_df["prm_value"].iloc[-1]
-df_inp_ch = pd.read_csv(main_dir / "task_5" / "output" / "input_changes.csv", index_col=0)
+df_inp_ch = pd.read_csv(main_dir / "task_5" / "output" / "input_changes_lisa.csv", index_col=0)
 
 # bring prm_values into correct format
 prm_val_new = np.array([np.fromstring(row.strip('[]'), sep=' ') for row in df_inp_ch["new_opt_params"]]).T.tolist()
@@ -108,3 +122,4 @@ for ax in axes.flat[len(prm_val_new):]:
 
 plt.show()
 
+'''
