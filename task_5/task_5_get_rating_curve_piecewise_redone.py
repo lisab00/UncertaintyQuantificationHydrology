@@ -279,7 +279,7 @@ def fit_power_eq():
 save_change_vector = []
 
 
-def change_ddho():
+def change_ddho(ddho):
     n = len(ddho)
     change_vector = np.random.uniform(-5, 5, n)
     save_change_vector.append(change_vector)
@@ -295,15 +295,24 @@ def compute_disp(ddho, coeffs):
     '''evaluate power function on ddho and return predicted discharge disp
     input should be perturbed ddho
     '''
-    i = (np.abs(ddho - 432)).argmin()
-    disp_s1 = np.polyval(coeffs[0], ddho[:i + 1])
-    disp_s2 = np.polyval(coeffs[1], ddho[i:])
-    disp_s2_concate = np.delete(disp_s2, 0)
-    disp = np.concatenate((disp_s1, disp_s2_concate))
+    # i = (np.abs(ddho - 432)).argmin()
+    indices_smaller = np.where(ddho < 432)
+    indices_bigger = np.where(ddho >= 432)
+
+    # Initialize an array to store results
+    disp = np.zeros_like(ddho, dtype=float)
+    disp[indices_smaller] = np.polyval(coeffs[0], ddho[indices_smaller])
+    # print(len(disp_s1))
+    disp[indices_bigger] = np.polyval(coeffs[1], ddho[indices_bigger])
+    # print(len(disp_s2))
+
+    # disp_s2_concate = np.delete(disp_s2, 0)
+    # print(len(disp_s2_concate))
+    # disp = np.concatenate((disp_s1, disp_s2))
     return disp
 
 
-def compute_coeffs(ddho, diso, degree, num_outliers=55):
+def compute_coeffs(ddho, diso, degree_s1, degree_s2):
     '''returns coeffs for rating curve
     inputs are original ddho / diso time series
     put i as: i = (np.abs(ddho - 432)).argmin()
@@ -317,8 +326,8 @@ def compute_coeffs(ddho, diso, degree, num_outliers=55):
     ddho_s2 = ddho[i:]
 
     # fit curves for each interval
-    coeffs_s1 = np.polyfit(ddho_s1, diso_s1, deg=degree)
-    coeffs_s2 = np.polyfit(ddho_s2, diso_s2, deg=degree)
+    coeffs_s1 = np.polyfit(ddho_s1, diso_s1, deg=degree_s1)
+    coeffs_s2 = np.polyfit(ddho_s2, diso_s2, deg=degree_s2)
 
     return (coeffs_s1, coeffs_s2)
 
@@ -342,9 +351,9 @@ if __name__ == "__main__":
     outlier_indices = res_sorted_indices[:num_outliers]
     ddho = np.delete(ddho, outlier_indices)
     diso = np.delete(diso, outlier_indices)
-    tems = np.delete(tems, outlier_indices)
-    ppts = np.delete(ppts, outlier_indices)
-    pets = np.delete(pets, outlier_indices)
+    # tems = np.delete(tems, outlier_indices)
+    # ppts = np.delete(ppts, outlier_indices)
+    # pets = np.delete(pets, outlier_indices)
 
     tsps = tems.shape[0]
     print(tsps)
@@ -352,13 +361,20 @@ if __name__ == "__main__":
     print(len(tems))
 
     # decide on degree and index for power function. do this once to obtain coeffs
-    degree = 12
-    # i = (np.abs(ddho - 430)).argmin()
-    coeffs = compute_coeffs(ddho, diso, degree)
+    degree_s1 = 5
+    degree_s2 = 19
+    coeffs = compute_coeffs(ddho, diso, degree_s1, degree_s2)
+    # print(coeffs)
+
+    tems = inp_dfe.loc[:, 'tavg__ref'].values  # Temperature.
+    ppts = inp_dfe.loc[:, 'pptn__ref'].values  # Preciptiation.
+    pets = inp_dfe.loc[:, 'petn__ref'].values  # PET.
+    diso = inp_dfe.loc[:, 'diso__ref'].values  # Observed discharge.
+    ddho = inp_dfe.loc[:, 'ddho__ref'].values  # Observed discharge.
 
     save_perturbed_ddho = []
     for k in range(2000):
-        ddho_perturbed = change_ddho()
+        ddho_perturbed = change_ddho(ddho)
         # ddho_perturbed = np.delete(ddho, outlier_indices)
         # run this every loop
         # call compute_disp for evers perturbed time series with same coeffs
@@ -380,13 +396,13 @@ if __name__ == "__main__":
     # print(len(output_df['change_value_ppts'][1]))
     output_ddho = pd.DataFrame(save_perturbed_ddho)
     output_ddho.columns = range(output_ddho.shape[1])
-    output_ddho.to_csv(main_dir / 'task_5' / 'output_ddho_lisa_redone.csv')
+    output_ddho.to_csv(main_dir / 'task_5' / 'output_ddho_lisa_redone_v2.csv')
 
     output_change = pd.DataFrame(save_change_vector)
     output_change.columns = range(output_change.shape[1])
-    output_change.to_csv(main_dir / 'task_5' / 'output_change_value_ddho_lisa_redone.csv')
+    output_change.to_csv(main_dir / 'task_5' / 'output_change_value_ddho_lisa_redone_v2.csv')
 
     # output_df['relative_ofv_change'] = output_df['new_ofv'] / last_objective_function
-    output_df.to_csv(main_dir / 'task_5' / 'input_changes_lisa_redone.csv')
+    output_df.to_csv(main_dir / 'task_5' / 'input_changes_lisa_redone_v2.csv')
 
     # print(popt)

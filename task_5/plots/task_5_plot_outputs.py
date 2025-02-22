@@ -16,7 +16,7 @@ df_pert_ddho = pd.read_csv(main_dir / "task_5" / "output" / "output_ddho_lisa_re
 #=============================================================================
 # plot cdf of perturbed ddho series
 
-'''# outliers removal
+# outliers removal
 ddho = df["ddho__ref"]
 diso = df["diso__ref"]
 sorted_indices = np.argsort(ddho)
@@ -42,7 +42,7 @@ for i in np.arange(len(df_pert_ddho)):
 
 sns.kdeplot(ddho, cumulative=True, color="blue", label="original", linewidth=1)
 plt.legend()
-plt.show()'''
+plt.show()
 
 #=============================================================================
 # plot cdf of ofv
@@ -66,7 +66,7 @@ plt.show()
 #=============================================================================
 # plot prm cdfs
 
-'''prm_names = [
+prm_names = [
         'snw_dth',
         'snw_ast',
         'snw_amt',
@@ -100,7 +100,8 @@ plt.show()
     ]
 
 prm_val_true = iterations_df["prm_value"].iloc[-1]
-df_inp_ch = pd.read_csv(main_dir / "task_5" / "output" / "input_changes_lisa.csv", index_col=0)
+prm_val_true = np.array(np.fromstring(prm_val_true.strip('[]'), sep=' '))
+df_inp_ch = pd.read_csv(main_dir / "task_5" / "output" / "input_changes_lisa_redone_v2.csv", index_col=0)
 
 # bring prm_values into correct format
 prm_val_new = np.array([np.fromstring(row.strip('[]'), sep=' ') for row in df_inp_ch["new_opt_params"]]).T.tolist()
@@ -114,12 +115,7 @@ for ax, i in zip(axes.flat, np.arange(len(prm_val_new))):
     ax.axvline(x=prm_val_true[i], color='orange', linestyle='--', label='True Value')
     ax.set_title(f"{prm_names[i]}")
     ax.set_ylabel("CDF")
-    ax.tick_params(axis='x', labelbottom=False)
-    # ax.legend()
-
-for ax in axes.flat[len(prm_val_new):]:
-    ax.axis('off')
+    ax.tick_params(axis='x')
 
 plt.show()
 
-'''
