@@ -28,7 +28,6 @@ def plot_fitted_curve(diss, diso, index):
     plt.show()
     plt.close(fig)
 
-
 def plot_optim_curve(obj_fct_values):
     # Plot of the optimization progress
     fig = plt.figure()
