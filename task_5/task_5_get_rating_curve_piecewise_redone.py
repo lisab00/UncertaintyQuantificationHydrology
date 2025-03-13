@@ -1,20 +1,6 @@
-
-'''
-Created on 24.01.2025
-
-@author: hfran
-'''
-'''
-Created on 09.01.2025
-
-@author: hfran
-'''
-
 '''
 Created on 15.11.2024
-
 @author: hfran
-@author: lisa
 '''
 
 import os
@@ -46,8 +32,7 @@ inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
 # inp_dfe = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
-# Read the catchment area in meters squared. The first value is needed
-# only.
+# Read the catchment area in meters squared. The first value is needed only.
 cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
 # cca_srs = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
@@ -385,9 +370,6 @@ if __name__ == "__main__":
         save_perturbed_ddho.append(ddho_perturbed)
         # fitted_discharges = power_eq(np.maximum(ddho_perturbed - h0_initial, 0), *popt)
         change_series_and_compute_ofv(disp, metric="nse")
-
-# TODO check for monotonically increasing
-# TODO maximalfehler 1mm = maximale absolute differenz , nicht mean
 
     # store data in csv to use for plots
     output_df = pd.DataFrame({'new_ofv_old_params': new_ofv,

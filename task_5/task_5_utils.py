@@ -1,3 +1,8 @@
+'''
+Created on 15.11.2024
+@author: lisa
+'''
+
 import os
 from pathlib import Path
 from scipy.interpolate import PPoly
@@ -21,6 +26,7 @@ def compute_disp(ddho, coeffs):
     disp_s2 = np.polyval(coeffs[1], ddho[i:])
     disp_s2_concate = np.delete(disp_s2, 0)
     disp = np.concatenate((disp_s1, disp_s2_concate))
+
     return disp
 
 
@@ -44,8 +50,20 @@ def compute_coeffs(ddho, diso, degree_s1, degree_s2):
     return (coeffs_s1, coeffs_s2)
 
 
+def abs_error(diss, disp):
+    """returns the maximal absolute difference between diss and disp
+    """
+    abs_dist = np.abs(diss - disp)
+    return max(abs_dist)
+
+
+def increasing(L):
+    return all(x <= y for x, y in zip(L, L[1:]))
+
+
 if __name__ == "__main__":
 
+    # read data
     main_dir = Path(r'C:\Users\lihel\Documents\MMUQ_Python_Setup\MMUQ_Python_Setup\EclipsePortable426\Data\mmuq_ws2425\hmg\UncertaintyQuantificationHydrology')
 
     inp_dfe = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)
@@ -76,19 +94,11 @@ if __name__ == "__main__":
 
     # ============================================================================
     # run this every loop
-    # call compute_disp for evers perturbed time series with same coeffs
-    # make sure you perturb time series where the outliers are removed!
+    # call compute_disp for every perturbed time series with same coeffs
     disp = compute_disp(ddho, coeffs)
 
     # ========================================================================
     # quantify abs error
-
-    def abs_error(diss, disp):
-        """returns the maximal absolute difference between diss and disp
-        """
-        abs_dist = np.abs(diss - disp)
-        return max(abs_dist)
-
     print(f"max absolute error: {abs_error(disp, diso)}")
 
     # ============================================================================
@@ -137,8 +147,5 @@ if __name__ == "__main__":
 
     disp_s2_ext_concate = np.delete(disp_s2_extended, 0)
     disp = np.concatenate((disp_s1_extended, disp_s2_ext_concate))
-
-    def increasing(L):
-        return all(x <= y for x, y in zip(L, L[1:]))
 
     print(f"The piecewise polynomial is increasing: {increasing(disp)}")

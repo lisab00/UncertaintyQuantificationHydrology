@@ -1,10 +1,4 @@
 '''
-Created on 09.01.2025
-
-@author: hfran
-'''
-
-'''
 Created on 15.11.2024
 
 @author: hfran
@@ -39,8 +33,7 @@ inp_dfe = pd.read_csv(r'time_series___24163005.csv', sep=';', index_col=0)
 # inp_dfe = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'time_series___24163005.csv', sep=';', index_col=0)
 inp_dfe.index = pd.to_datetime(inp_dfe.index, format='%Y-%m-%d-%H')
 
-# Read the catchment area in meters squared. The first value is needed
-# only.
+# Read the catchment area in meters squared. The first value is needed only.
 cca_srs = pd.read_csv(r'area___24163005.csv', sep=';', index_col=0)
 # cca_srs = pd.read_csv(main_dir / 'data' / 'time_series__24163005' / 'area___24163005.csv', sep=';', index_col=0)
 ccaa = cca_srs.values[0, 0]
